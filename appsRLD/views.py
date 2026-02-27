@@ -609,42 +609,105 @@ class StatisticsDashboardView(TemplateView):
 
 
 # ========== ABOUT ==========
-# class AboutView(TemplateView):
-#     """
-#     Halaman tentang aplikasi dan metodologi
-#     """
+# class AboutView(LoginRequiredMixin, TemplateView):
 #     template_name = 'appsRLD/about.html'
 #     login_url = '/login/'
 
 #     def get_context_data(self, **kwargs):
 #         context = super().get_context_data(**kwargs)
+
 #         context['methodology'] = {
 #             'preprocessing': [
-#                 'Resizing (256x256)',
-#                 'Grayscale Conversion',
-#                 'Gaussian Filter (Noise Reduction)',
-#                 'Normalisasi'
+#                 {'icon': 'bi-arrows-angle-contract', 'title': 'Resizing', 'desc': 'Mengubah ukuran gambar menjadi 256×256 piksel untuk konsistensi input model.'},
+#                 {'icon': 'bi-circle-half', 'title': 'Grayscale Conversion', 'desc': 'Mengkonversi gambar RGB ke grayscale untuk menyederhanakan analisis tekstur.'},
+#                 {'icon': 'bi-wind', 'title': 'Gaussian Filter', 'desc': 'Mengurangi noise pada gambar menggunakan kernel 5×5 untuk hasil ekstraksi fitur yang lebih bersih.'},
+#                 {'icon': 'bi-sliders', 'title': 'Normalisasi', 'desc': 'Menormalkan nilai piksel ke rentang 0–255 agar fitur GLCM lebih stabil.'},
 #             ],
 #             'feature_extraction': [
-#                 'GLCM (Gray Level Co-occurrence Matrix)',
-#                 '6 Fitur: Contrast, Correlation, Energy, Homogeneity, Dissimilarity, ASM',
-#                 '4 Sudut: 0°, 45°, 90°, 135°',
-#                 'Total: 24 Fitur'
+#                 {'icon': 'bi-grid-3x3', 'title': 'GLCM (24 Fitur)', 'desc': 'Gray Level Co-occurrence Matrix pada 4 sudut (0°, 45°, 90°, 135°): Contrast, Dissimilarity, Homogeneity, Energy, Correlation, ASM.'},
+#                 {'icon': 'bi-palette-fill', 'title': 'Color Features (39 Fitur)', 'desc': 'Fitur warna dari ruang warna HSV dan LAB: mean, std, skewness per channel + histogram BGR 8 bins.'},
+#                 {'icon': 'bi-layout-wtf',  'title': 'LBP (29 Fitur)', 'desc': 'Local Binary Pattern dengan radius=3, n_points=24: histogram uniform LBP + statistik mean, std, entropy.'},
+#             ],
+#             'handling_imbalanced': [
+#                 {'icon': 'bi-bezier2', 'title': 'BorderlineSMOTE', 'desc': 'Synthetic Minority Over-sampling Technique versi Borderline untuk menghasilkan sampel sintetis yang lebih representatif di batas keputusan.'},
+#                 {'icon': 'bi-arrow-left-right', 'title': 'Data Augmentasi', 'desc': 'Flip horizontal/vertikal, rotasi 90°/180°, dan variasi brightness untuk kelas minoritas (Bacterial Blight & Tungro).'},
 #             ],
 #             'classification': [
-#                 'Random Forest Classifier',
-#                 'SMOTE untuk handling imbalanced data',
-#                 '5 Kelas: Bacterial Blight, Rice Blast, Tungro, Healthy, Rice'
-#             ]
+#                 {'icon': 'bi-tree-fill', 'title': 'Random Forest', 'desc': 'Ensemble 500 decision trees dengan max_features=sqrt dan class_weight=balanced.'},
+#                 {'icon': 'bi-diagram-3-fill', 'title': 'Extra Trees', 'desc': 'Extremely Randomized Trees dengan 800 estimators, lebih acak dari RF untuk mengurangi variance.'},
+#                 {'icon': 'bi-graph-up-arrow', 'title': 'Gradient Boosting', 'desc': 'Sequential boosting dengan 400 estimators, learning_rate=0.05, dan max_depth=6.'},
+#                 {'icon': 'bi-collection-fill', 'title': 'Voting Ensemble (Soft)', 'desc': 'Menggabungkan prediksi probabilitas dari RF + ET + GB menggunakan soft voting untuk akurasi optimal.'},
+#             ],
 #         }
+
 #         context['dataset_info'] = {
 #             'name': 'Rice Leaf and Crop Disease Detection Dataset',
 #             'source': 'Mendeley Data',
-#             'total_samples': '10,766 images',
-#             'classes': 4
+#             'total_samples': '2,804',
+#             'augmented_samples': '~5,000+',
+#             'classes': 4,
+#             'class_list': [
+#                 {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger', 'icon': 'bi-bug-fill'},
+#                 {'name': 'Rice Blast', 'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
+#                 {'name': 'Tungro', 'count': '537', 'color': 'info', 'icon': 'bi-virus2'},
+#                 {'name': 'Healthy', 'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
+#             ]
 #         }
-#         return context
 
+#         context['model_performance'] = {
+#             'accuracy': 93,
+#             'precision': 93,
+#             'recall': 93,
+#             'f1_score': 93,
+#             'per_class': [
+#                 {'name': 'Bacterial Blight', 'accuracy': 89, 'color': 'danger'},
+#                 {'name': 'Rice Blast', 'accuracy': 94, 'color': 'warning'},
+#                 {'name': 'Tungro', 'accuracy': 91, 'color': 'info'},
+#                 {'name': 'Healthy', 'accuracy': 98, 'color': 'success'},
+#             ]
+#         }
+
+#         context['tech_stack'] = [
+#             {'name': 'Django 5.2', 'icon': 'bi-server', 'color': 'success', 'desc': 'Web Framework'},
+#             {'name': 'Python 3.13', 'icon': 'bi-code-slash', 'color': 'primary', 'desc': 'Programming Language'},
+#             {'name': 'Scikit-learn', 'icon': 'bi-robot', 'color': 'warning', 'desc': 'Machine Learning'},
+#             {'name': 'OpenCV', 'icon': 'bi-camera-fill', 'color': 'info', 'desc': 'Image Processing'},
+#             {'name': 'PostgreSQL', 'icon': 'bi-database-fill', 'color': 'primary', 'desc': 'Database'},
+#             {'name': 'Bootstrap 5', 'icon': 'bi-bootstrap-fill', 'color': 'purple', 'desc': 'UI Framework'},
+#         ]
+
+#         context['training_scores'] = {
+#             'train_val': [
+#                 {'label': 'Validation Accuracy', 'value': 84.76, 'color': 'primary'},
+#                 {'label': 'Testing Accuracy',    'value': 93.00, 'color': 'success'},
+#                 {'label': 'Testing Precision',   'value': 93.00, 'color': 'info'},
+#                 {'label': 'Testing Recall',      'value': 93.00, 'color': 'warning'},
+#                 {'label': 'Testing F1-Score',    'value': 93.00, 'color': 'danger'},
+#             ],
+#             'per_class_detail': [
+#                 {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
+#                 {'name': 'Rice Blast',       'precision': 94, 'recall': 93, 'f1': 93, 'support': 135, 'color': 'warning'},
+#                 {'name': 'Tungro',           'precision': 91, 'recall': 90, 'f1': 91, 'support': 81,  'color': 'info'},
+#                 {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
+#             ],
+#             'split_info': {
+#                 'total': 2804,
+#                 'train': 1963,
+#                 'val': 420,
+#                 'test': 421,
+#                 'smote_after': 2600,
+#             }
+#         }
+
+#         context['flow_steps'] = [
+#             {'number': 1, 'label': 'Input',            'desc': 'Gambar daun padi (upload / kamera)'},
+#             {'number': 2, 'label': 'Preprocessing',    'desc': 'Resize → Grayscale → Gaussian → Normalize'},
+#             {'number': 3, 'label': 'Ekstraksi Fitur',  'desc': 'GLCM + Color (HSV/LAB) + LBP = 92 fitur'},
+#             {'number': 4, 'label': 'Klasifikasi',      'desc': 'Voting Ensemble (RF + ET + GB)'},
+#             {'number': 5, 'label': 'Output',           'desc': 'Jenis penyakit + confidence score'},
+#         ]
+
+#         return context
 class AboutView(LoginRequiredMixin, TemplateView):
     template_name = 'appsRLD/about.html'
     login_url = '/login/'
@@ -652,73 +715,127 @@ class AboutView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # =====================================================================
+        # Ambil data training terbaru dari database (diisi otomatis saat training)
+        # Field yang tersedia: accuracy, precision, recall, f1_score,
+        #   total_samples, training_samples, validation_samples, test_samples,
+        #   samples_after_smote, training_duration, smote_applied, notes,
+        #   model_name, version, created_at
+        # =====================================================================
+        try:
+            from appsRLD.models import ModelTrainingHistory
+            latest_training = ModelTrainingHistory.objects.filter(is_active=True).first()
+        except Exception:
+            latest_training = None
+
+        context['latest_training'] = latest_training
+
+        # =====================================================================
+        # Alur Sistem
+        # =====================================================================
+        context['flow_steps'] = [
+            {'number': 1, 'label': 'Input',            'desc': 'Gambar daun padi (upload / kamera)'},
+            {'number': 2, 'label': 'Preprocessing',    'desc': 'Resize → Grayscale → Gaussian → Normalize'},
+            {'number': 3, 'label': 'Ekstraksi Fitur',  'desc': 'GLCM + Color (HSV/LAB) + LBP = 92 fitur'},
+            {'number': 4, 'label': 'Klasifikasi',      'desc': 'Voting Ensemble (RF + ET + GB)'},
+            {'number': 5, 'label': 'Output',           'desc': 'Jenis penyakit + confidence score'},
+        ]
+
+        # =====================================================================
+        # Metodologi
+        # =====================================================================
         context['methodology'] = {
             'preprocessing': [
-                {'icon': 'bi-arrows-angle-contract', 'title': 'Resizing', 'desc': 'Mengubah ukuran gambar menjadi 256×256 piksel untuk konsistensi input model.'},
-                {'icon': 'bi-circle-half', 'title': 'Grayscale Conversion', 'desc': 'Mengkonversi gambar RGB ke grayscale untuk menyederhanakan analisis tekstur.'},
-                {'icon': 'bi-wind', 'title': 'Gaussian Filter', 'desc': 'Mengurangi noise pada gambar menggunakan kernel 5×5 untuk hasil ekstraksi fitur yang lebih bersih.'},
-                {'icon': 'bi-sliders', 'title': 'Normalisasi', 'desc': 'Menormalkan nilai piksel ke rentang 0–255 agar fitur GLCM lebih stabil.'},
+                {'icon': 'bi-arrows-angle-contract', 'title': 'Resizing',           'desc': 'Mengubah ukuran gambar menjadi 256×256 piksel untuk konsistensi input model.'},
+                {'icon': 'bi-circle-half',           'title': 'Grayscale',          'desc': 'Mengkonversi gambar RGB ke grayscale untuk menyederhanakan analisis tekstur.'},
+                {'icon': 'bi-wind',                  'title': 'Gaussian Filter',    'desc': 'Mengurangi noise pada gambar menggunakan kernel 5×5 untuk hasil ekstraksi fitur yang lebih bersih.'},
+                {'icon': 'bi-sliders',               'title': 'Normalisasi',        'desc': 'Menormalkan nilai piksel ke rentang 0–255 agar fitur GLCM lebih stabil.'},
             ],
             'feature_extraction': [
-                {'icon': 'bi-grid-3x3', 'title': 'GLCM (24 Fitur)', 'desc': 'Gray Level Co-occurrence Matrix pada 4 sudut (0°, 45°, 90°, 135°): Contrast, Dissimilarity, Homogeneity, Energy, Correlation, ASM.'},
-                {'icon': 'bi-palette-fill', 'title': 'Color Features (39 Fitur)', 'desc': 'Fitur warna dari ruang warna HSV dan LAB: mean, std, skewness per channel + histogram BGR 8 bins.'},
-                {'icon': 'bi-layout-wtf',  'title': 'LBP (29 Fitur)', 'desc': 'Local Binary Pattern dengan radius=3, n_points=24: histogram uniform LBP + statistik mean, std, entropy.'},
+                {'icon': 'bi-grid-3x3',    'title': 'GLCM (24 Fitur)',        'desc': 'Gray Level Co-occurrence Matrix pada 4 sudut (0°, 45°, 90°, 135°): Contrast, Dissimilarity, Homogeneity, Energy, Correlation, ASM.'},
+                {'icon': 'bi-palette-fill','title': 'Color Features (39 Fitur)', 'desc': 'Fitur warna dari ruang warna HSV dan LAB: mean, std, skewness per channel + histogram BGR 8 bins.'},
+                {'icon': 'bi-layout-wtf',  'title': 'LBP (29 Fitur)',         'desc': 'Local Binary Pattern dengan radius=3, n_points=24: histogram uniform LBP + statistik mean, std, entropy.'},
             ],
             'handling_imbalanced': [
-                {'icon': 'bi-bezier2', 'title': 'BorderlineSMOTE', 'desc': 'Synthetic Minority Over-sampling Technique versi Borderline untuk menghasilkan sampel sintetis yang lebih representatif di batas keputusan.'},
-                {'icon': 'bi-arrow-left-right', 'title': 'Data Augmentasi', 'desc': 'Flip horizontal/vertikal, rotasi 90°/180°, dan variasi brightness untuk kelas minoritas (Bacterial Blight & Tungro).'},
+                {'icon': 'bi-bezier2',        'title': 'BorderlineSMOTE', 'desc': 'Synthetic Minority Over-sampling Technique versi Borderline untuk menghasilkan sampel sintetis yang lebih representatif di batas keputusan.'},
+                {'icon': 'bi-arrow-left-right','title': 'Data Augmentasi', 'desc': 'Flip horizontal/vertikal, rotasi 90°/180°, dan variasi brightness untuk kelas minoritas (Bacterial Blight & Tungro).'},
             ],
             'classification': [
-                {'icon': 'bi-tree-fill', 'title': 'Random Forest', 'desc': 'Ensemble 500 decision trees dengan max_features=sqrt dan class_weight=balanced.'},
-                {'icon': 'bi-diagram-3-fill', 'title': 'Extra Trees', 'desc': 'Extremely Randomized Trees dengan 800 estimators, lebih acak dari RF untuk mengurangi variance.'},
-                {'icon': 'bi-graph-up-arrow', 'title': 'Gradient Boosting', 'desc': 'Sequential boosting dengan 400 estimators, learning_rate=0.05, dan max_depth=6.'},
-                {'icon': 'bi-collection-fill', 'title': 'Voting Ensemble (Soft)', 'desc': 'Menggabungkan prediksi probabilitas dari RF + ET + GB menggunakan soft voting untuk akurasi optimal.'},
+                {'icon': 'bi-tree-fill',       'title': 'Random Forest',        'desc': 'Ensemble 500 decision trees dengan max_features=sqrt dan class_weight=balanced.'},
+                {'icon': 'bi-diagram-3-fill',  'title': 'Extra Trees',          'desc': 'Extremely Randomized Trees dengan 800 estimators, lebih acak dari RF untuk mengurangi variance.'},
+                {'icon': 'bi-graph-up-arrow',  'title': 'Gradient Boosting',    'desc': 'Sequential boosting dengan 400 estimators, learning_rate=0.05, dan max_depth=6.'},
+                {'icon': 'bi-collection-fill', 'title': 'Voting Ensemble (Soft)','desc': 'Menggabungkan prediksi probabilitas dari RF + ET + GB menggunakan soft voting untuk akurasi optimal.'},
             ],
         }
 
+        # =====================================================================
+        # Dataset
+        # =====================================================================
         context['dataset_info'] = {
             'name': 'Rice Leaf and Crop Disease Detection Dataset',
             'source': 'Mendeley Data',
-            'total_samples': '2,804',
+            # Gunakan total_samples dari DB jika tersedia, fallback ke nilai statis
+            'total_samples': latest_training.total_samples if latest_training else '2,804',
             'augmented_samples': '~5,000+',
             'classes': 4,
             'class_list': [
-                {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger', 'icon': 'bi-bug-fill'},
-                {'name': 'Rice Blast', 'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
-                {'name': 'Tungro', 'count': '537', 'color': 'info', 'icon': 'bi-virus2'},
-                {'name': 'Healthy', 'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
+                {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger',  'icon': 'bi-bug-fill'},
+                {'name': 'Rice Blast',            'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
+                {'name': 'Tungro',                'count': '537', 'color': 'info',    'icon': 'bi-virus2'},
+                {'name': 'Healthy',               'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
             ]
         }
+
+        # =====================================================================
+        # Performa Model
+        # Prioritaskan nilai dari DB (hasil training nyata),
+        # fallback ke nilai hardcoded jika DB kosong
+        # =====================================================================
+        acc   = round(latest_training.accuracy,  1) if latest_training else 93
+        prec  = round(latest_training.precision, 1) if latest_training else 93
+        rec   = round(latest_training.recall,    1) if latest_training else 93
+        f1    = round(latest_training.f1_score,  1) if latest_training else 93
 
         context['model_performance'] = {
-            'accuracy': 93,
-            'precision': 93,
-            'recall': 93,
-            'f1_score': 93,
+            'accuracy':  acc,
+            'precision': prec,
+            'recall':    rec,
+            'f1_score':  f1,
+            # Per-class tetap statis karena classification report per-kelas
+            # tidak disimpan di ModelTrainingHistory
             'per_class': [
                 {'name': 'Bacterial Blight', 'accuracy': 89, 'color': 'danger'},
-                {'name': 'Rice Blast', 'accuracy': 94, 'color': 'warning'},
-                {'name': 'Tungro', 'accuracy': 91, 'color': 'info'},
-                {'name': 'Healthy', 'accuracy': 98, 'color': 'success'},
+                {'name': 'Rice Blast',       'accuracy': 94, 'color': 'warning'},
+                {'name': 'Tungro',           'accuracy': 91, 'color': 'info'},
+                {'name': 'Healthy',          'accuracy': 98, 'color': 'success'},
             ]
         }
 
-        context['tech_stack'] = [
-            {'name': 'Django 5.2', 'icon': 'bi-server', 'color': 'success', 'desc': 'Web Framework'},
-            {'name': 'Python 3.13', 'icon': 'bi-code-slash', 'color': 'primary', 'desc': 'Programming Language'},
-            {'name': 'Scikit-learn', 'icon': 'bi-robot', 'color': 'warning', 'desc': 'Machine Learning'},
-            {'name': 'OpenCV', 'icon': 'bi-camera-fill', 'color': 'info', 'desc': 'Image Processing'},
-            {'name': 'PostgreSQL', 'icon': 'bi-database-fill', 'color': 'primary', 'desc': 'Database'},
-            {'name': 'Bootstrap 5', 'icon': 'bi-bootstrap-fill', 'color': 'purple', 'desc': 'UI Framework'},
-        ]
+        # =====================================================================
+        # Training & Testing Scores
+        # Nilai agregat diambil dari DB jika tersedia
+        # =====================================================================
+        total    = latest_training.total_samples       if latest_training else 2804
+        train_n  = latest_training.training_samples    if latest_training else 1963
+        val_n    = latest_training.validation_samples  if latest_training else 420
+        test_n   = latest_training.test_samples        if latest_training else 421
+        smote_n  = latest_training.samples_after_smote if latest_training else 2600
+
+        # Validation accuracy tidak disimpan terpisah di DB —
+        # gunakan nilai hardcoded; testing accuracy dari DB
+        val_acc  = 84.76
+        test_acc = round(latest_training.accuracy,  2) if latest_training else 93.00
+        test_pre = round(latest_training.precision, 2) if latest_training else 93.00
+        test_rec = round(latest_training.recall,    2) if latest_training else 93.00
+        test_f1  = round(latest_training.f1_score,  2) if latest_training else 93.00
 
         context['training_scores'] = {
             'train_val': [
-                {'label': 'Validation Accuracy', 'value': 84.76, 'color': 'primary'},
-                {'label': 'Testing Accuracy',    'value': 93.00, 'color': 'success'},
-                {'label': 'Testing Precision',   'value': 93.00, 'color': 'info'},
-                {'label': 'Testing Recall',      'value': 93.00, 'color': 'warning'},
-                {'label': 'Testing F1-Score',    'value': 93.00, 'color': 'danger'},
+                {'label': 'Akurasi Validasi',    'value': val_acc,  'color': 'primary'},
+                {'label': 'Akurasi Pengujian',   'value': test_acc, 'color': 'success'},
+                {'label': 'Presisi Pengujian',   'value': test_pre, 'color': 'info'},
+                {'label': 'Recall Pengujian',    'value': test_rec, 'color': 'warning'},
+                {'label': 'F1-Score Pengujian',  'value': test_f1,  'color': 'danger'},
             ],
             'per_class_detail': [
                 {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
@@ -727,20 +844,24 @@ class AboutView(LoginRequiredMixin, TemplateView):
                 {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
             ],
             'split_info': {
-                'total': 2804,
-                'train': 1963,
-                'val': 420,
-                'test': 421,
-                'smote_after': 2600,
+                'total':       total,
+                'train':       train_n,
+                'val':         val_n,
+                'test':        test_n,
+                'smote_after': smote_n,
             }
         }
 
-        context['flow_steps'] = [
-            {'number': 1, 'label': 'Input',            'desc': 'Gambar daun padi (upload / kamera)'},
-            {'number': 2, 'label': 'Preprocessing',    'desc': 'Resize → Grayscale → Gaussian → Normalize'},
-            {'number': 3, 'label': 'Ekstraksi Fitur',  'desc': 'GLCM + Color (HSV/LAB) + LBP = 92 fitur'},
-            {'number': 4, 'label': 'Klasifikasi',      'desc': 'Voting Ensemble (RF + ET + GB)'},
-            {'number': 5, 'label': 'Output',           'desc': 'Jenis penyakit + confidence score'},
+        # =====================================================================
+        # Tech Stack
+        # =====================================================================
+        context['tech_stack'] = [
+            {'name': 'Django 5.2',   'icon': 'bi-server',         'color': 'success', 'desc': 'Web Framework'},
+            {'name': 'Python 3.13',  'icon': 'bi-code-slash',     'color': 'primary', 'desc': 'Programming Language'},
+            {'name': 'Scikit-learn', 'icon': 'bi-robot',          'color': 'warning', 'desc': 'Machine Learning'},
+            {'name': 'OpenCV',       'icon': 'bi-camera-fill',    'color': 'info',    'desc': 'Image Processing'},
+            {'name': 'PostgreSQL',   'icon': 'bi-database-fill',  'color': 'primary', 'desc': 'Database'},
+            {'name': 'Bootstrap 5',  'icon': 'bi-bootstrap-fill', 'color': 'purple',  'desc': 'UI Framework'},
         ]
 
         return context

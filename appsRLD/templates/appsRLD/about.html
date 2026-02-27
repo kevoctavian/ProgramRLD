@@ -1,5 +1,5 @@
 {% extends 'appsRLD/base.html' %}
-{% block title %}About - Rice Disease Classification{% endblock %}
+{% block title %}Tentang Sistem - Cek Penyakit Padi{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -104,6 +104,15 @@
     }
     .purple { color: #6f42c1 !important; }
     .progress { height: 10px; border-radius: 5px; }
+
+    /* Badge training terbaru */
+    .training-meta {
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        padding: 0.5rem 1.2rem;
+        display: inline-block;
+        font-size: 0.85rem;
+    }
 </style>
 {% endblock %}
 
@@ -114,10 +123,17 @@
     <div class="container text-center">
         <i class="bi bi-book-fill" style="font-size:3.5rem;"></i>
         <h1 class="fw-bold mt-3">Tentang Sistem</h1>
-        <p class="lead opacity-90 mb-0">
-            Sistem Klasifikasi Penyakit Daun Padi menggunakan<br>
+        <p class="lead opacity-90 mb-3">
+            Sistem Deteksi Penyakit Daun Padi menggunakan<br>
             <strong>Random Forest + GLCM + SMOTE</strong>
         </p>
+        {% if latest_training %}
+        <div class="training-meta">
+            <i class="bi bi-clock-history"></i>
+            Model terakhir dilatih: <strong>{{ latest_training.created_at|date:"d M Y, H:i" }}</strong>
+            &nbsp;|&nbsp; Versi: <strong>{{ latest_training.version }}</strong>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -160,7 +176,7 @@
         <div class="mb-4">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <div class="step-number">1</div>
-                <h5 class="fw-bold mb-0">Preprocessing Gambar</h5>
+                <h5 class="fw-bold mb-0">Persiapan Gambar (Preprocessing)</h5>
             </div>
             <div class="row g-3">
                 {% for item in methodology.preprocessing %}
@@ -206,7 +222,7 @@
         <div class="mb-4">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <div class="step-number">3</div>
-                <h5 class="fw-bold mb-0">Handling Imbalanced Data</h5>
+                <h5 class="fw-bold mb-0">Penyeimbangan Data (Handling Imbalanced Data)</h5>
             </div>
             <div class="row g-3">
                 {% for item in methodology.handling_imbalanced %}
@@ -253,40 +269,75 @@
     <div class="mb-5">
         <h2 class="section-title"><i class="bi bi-trophy-fill text-success"></i> Performa Model</h2>
         <div class="card p-4">
-            <!-- Overall Metrics -->
+
+            {% if latest_training %}
+            <!-- Sumber data dari training terbaru -->
+            <div class="alert alert-success py-2 mb-4">
+                <i class="bi bi-check-circle-fill"></i>
+                Data performa diambil dari hasil pelatihan model:
+                <strong>{{ latest_training.model_name }}</strong>
+                ({{ latest_training.created_at|date:"d M Y" }})
+            </div>
+            {% endif %}
+
+            <!-- Metrik Utama -->
             <div class="row text-center mb-4">
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-circle">
-                        <h3>{{ model_performance.accuracy }}%</h3>
-                        <small>Accuracy</small>
+                        <h3>
+                            {% if latest_training %}
+                                {{ latest_training.accuracy|floatformat:1 }}%
+                            {% else %}
+                                {{ model_performance.accuracy }}%
+                            {% endif %}
+                        </h3>
+                        <small>Akurasi</small>
                     </div>
                     <p class="mt-2 fw-semibold text-muted small">Akurasi Keseluruhan</p>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-circle">
-                        <h3>{{ model_performance.precision }}%</h3>
-                        <small>Precision</small>
+                        <h3>
+                            {% if latest_training %}
+                                {{ latest_training.precision|floatformat:1 }}%
+                            {% else %}
+                                {{ model_performance.precision }}%
+                            {% endif %}
+                        </h3>
+                        <small>Presisi</small>
                     </div>
-                    <p class="mt-2 fw-semibold text-muted small">Presisi</p>
+                    <p class="mt-2 fw-semibold text-muted small">Presisi (Precision)</p>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-circle">
-                        <h3>{{ model_performance.recall }}%</h3>
+                        <h3>
+                            {% if latest_training %}
+                                {{ latest_training.recall|floatformat:1 }}%
+                            {% else %}
+                                {{ model_performance.recall }}%
+                            {% endif %}
+                        </h3>
                         <small>Recall</small>
                     </div>
                     <p class="mt-2 fw-semibold text-muted small">Recall</p>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-circle">
-                        <h3>{{ model_performance.f1_score }}%</h3>
+                        <h3>
+                            {% if latest_training %}
+                                {{ latest_training.f1_score|floatformat:1 }}%
+                            {% else %}
+                                {{ model_performance.f1_score }}%
+                            {% endif %}
+                        </h3>
                         <small>F1-Score</small>
                     </div>
                     <p class="mt-2 fw-semibold text-muted small">F1-Score</p>
                 </div>
             </div>
 
-            <!-- Per-class Accuracy -->
-            <h6 class="fw-bold mb-3">Akurasi per Kelas:</h6>
+            <!-- Akurasi per Kelas -->
+            <h6 class="fw-bold mb-3">Akurasi per Jenis Penyakit:</h6>
             <div class="row g-3">
                 {% for cls in model_performance.per_class %}
                 <div class="col-md-6">
@@ -307,54 +358,120 @@
     <!-- ===== TRAINING & TESTING SCORES ===== -->
     <div class="mb-5">
         <h2 class="section-title">
-            <i class="bi bi-graph-up text-success"></i> Hasil Training & Testing
+            <i class="bi bi-graph-up text-success"></i> Hasil Pelatihan & Pengujian Model
         </h2>
 
-        <!-- Split Info -->
+        <!-- Pembagian Dataset -->
         <div class="card mb-4 p-4">
             <h6 class="fw-bold mb-3">Pembagian Dataset (70/15/15)</h6>
             <div class="row text-center g-3">
                 <div class="col-6 col-md">
                     <div class="p-3 rounded bg-light">
                         <div class="fw-bold text-muted small">Total Sampel</div>
-                        <div class="fs-4 fw-bold text-dark">{{ training_scores.split_info.total|floatformat:0 }}</div>
+                        <div class="fs-4 fw-bold text-dark">
+                            {% if latest_training %}
+                                {{ latest_training.total_samples }}
+                            {% else %}
+                                {{ training_scores.split_info.total|floatformat:0 }}
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="p-3 rounded" style="background:#e8f5e9;">
-                        <div class="fw-bold text-muted small">Training</div>
-                        <div class="fs-4 fw-bold text-success">{{ training_scores.split_info.train }}</div>
+                        <div class="fw-bold text-muted small">Pelatihan</div>
+                        <div class="fs-4 fw-bold text-success">
+                            {% if latest_training %}
+                                {{ latest_training.training_samples }}
+                            {% else %}
+                                {{ training_scores.split_info.train }}
+                            {% endif %}
+                        </div>
                         <div class="text-muted" style="font-size:0.75rem;">70%</div>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="p-3 rounded" style="background:#e3f2fd;">
                         <div class="fw-bold text-muted small">Validasi</div>
-                        <div class="fs-4 fw-bold text-primary">{{ training_scores.split_info.val }}</div>
+                        <div class="fs-4 fw-bold text-primary">
+                            {% if latest_training %}
+                                {{ latest_training.validation_samples }}
+                            {% else %}
+                                {{ training_scores.split_info.val }}
+                            {% endif %}
+                        </div>
                         <div class="text-muted" style="font-size:0.75rem;">15%</div>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="p-3 rounded" style="background:#fff3e0;">
-                        <div class="fw-bold text-muted small">Testing</div>
-                        <div class="fs-4 fw-bold text-warning">{{ training_scores.split_info.test }}</div>
+                        <div class="fw-bold text-muted small">Pengujian</div>
+                        <div class="fs-4 fw-bold text-warning">
+                            {% if latest_training %}
+                                {{ latest_training.test_samples }}
+                            {% else %}
+                                {{ training_scores.split_info.test }}
+                            {% endif %}
+                        </div>
                         <div class="text-muted" style="font-size:0.75rem;">15%</div>
                     </div>
                 </div>
                 <div class="col-6 col-md">
                     <div class="p-3 rounded" style="background:#f3e5f5;">
                         <div class="fw-bold text-muted small">Setelah SMOTE</div>
-                        <div class="fs-4 fw-bold text-purple" style="color:#6f42c1;">{{ training_scores.split_info.smote_after }}</div>
-                        <div class="text-muted" style="font-size:0.75rem;">Training Set</div>
+                        <div class="fs-4 fw-bold" style="color:#6f42c1;">
+                            {% if latest_training %}
+                                {{ latest_training.samples_after_smote }}
+                            {% else %}
+                                {{ training_scores.split_info.smote_after }}
+                            {% endif %}
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;">Data Pelatihan</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Overall Scores -->
+        <!-- Skor Keseluruhan -->
         <div class="card mb-4 p-4">
             <h6 class="fw-bold mb-3">Skor Keseluruhan</h6>
             <div class="row g-3">
+                <!-- Akurasi Validasi -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">Akurasi Validasi</span>
+                        <span class="badge bg-primary fs-6">
+                            {% if latest_training %}
+                                {{ latest_training.accuracy|floatformat:2 }}%
+                            {% else %}
+                                {{ training_scores.val_accuracy }}%
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary"
+                            style="width: {% if latest_training %}{{ latest_training.accuracy|floatformat:0 }}{% else %}{{ training_scores.val_accuracy }}{% endif %}%">
+                        </div>
+                    </div>
+                </div>
+                <!-- Akurasi Testing -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">Akurasi Pengujian</span>
+                        <span class="badge bg-success fs-6">
+                            {% if latest_training %}
+                                {{ latest_training.accuracy|floatformat:2 }}%
+                            {% else %}
+                                {{ training_scores.test_accuracy }}%
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success"
+                            style="width: {% if latest_training %}{{ latest_training.accuracy|floatformat:0 }}{% else %}{{ training_scores.test_accuracy }}{% endif %}%">
+                        </div>
+                    </div>
+                </div>
                 {% for score in training_scores.train_val %}
                 <div class="col-md-6">
                     <div class="d-flex justify-content-between align-items-center mb-1">
@@ -371,21 +488,25 @@
             </div>
         </div>
 
-        <!-- Per-Class Detail Table -->
+        <!-- Laporan per Kelas -->
         <div class="card p-4">
             <h6 class="fw-bold mb-3">
-                Classification Report per Kelas
-                <span class="badge bg-success ms-2">Test Set (421 sampel)</span>
+                Laporan Klasifikasi per Jenis Penyakit
+                <span class="badge bg-success ms-2">
+                    Data Uji:
+                    {% if latest_training %}{{ latest_training.test_samples }}{% else %}421{% endif %}
+                    sampel
+                </span>
             </h6>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-success">
                         <tr>
-                            <th>Kelas</th>
-                            <th class="text-center">Precision</th>
+                            <th>Jenis Penyakit</th>
+                            <th class="text-center">Presisi</th>
                             <th class="text-center">Recall</th>
                             <th class="text-center">F1-Score</th>
-                            <th class="text-center">Support</th>
+                            <th class="text-center">Jumlah Sampel</th>
                             <th style="min-width:120px;">Visualisasi</th>
                         </tr>
                     </thead>
@@ -410,23 +531,25 @@
                             </td>
                         </tr>
                         {% endfor %}
-                        <!-- Weighted Average -->
+                        <!-- Rata-rata Tertimbang -->
                         <tr class="table-light fw-bold">
-                            <td>Weighted Average</td>
+                            <td>Rata-rata Keseluruhan</td>
                             <td class="text-center text-dark">
-                                {{ model_performance.precision }}%
+                                {% if latest_training %}{{ latest_training.precision|floatformat:2 }}%{% else %}{{ model_performance.precision }}%{% endif %}
                             </td>
                             <td class="text-center text-dark">
-                                {{ model_performance.recall }}%
+                                {% if latest_training %}{{ latest_training.recall|floatformat:2 }}%{% else %}{{ model_performance.recall }}%{% endif %}
                             </td>
                             <td class="text-center text-dark">
-                                {{ model_performance.f1_score }}%
+                                {% if latest_training %}{{ latest_training.f1_score|floatformat:2 }}%{% else %}{{ model_performance.f1_score }}%{% endif %}
                             </td>
-                            <td class="text-center text-muted">421</td>
+                            <td class="text-center text-muted">
+                                {% if latest_training %}{{ latest_training.test_samples }}{% else %}421{% endif %}
+                            </td>
                             <td>
                                 <div class="progress" style="height:8px;">
                                     <div class="progress-bar bg-dark"
-                                        style="width:{{ model_performance.f1_score }}%">
+                                        style="width:{% if latest_training %}{{ latest_training.f1_score|floatformat:0 }}{% else %}{{ model_performance.f1_score }}{% endif %}%">
                                     </div>
                                 </div>
                             </td>
@@ -434,6 +557,20 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Waktu Training -->
+            {% if latest_training %}
+            <div class="mt-3 text-muted small">
+                <i class="bi bi-clock"></i>
+                Durasi pelatihan: <strong>{{ latest_training.training_duration|floatformat:2 }} menit</strong>
+                &nbsp;|&nbsp;
+                <i class="bi bi-cpu"></i>
+                SMOTE diterapkan: <strong>{{ latest_training.smote_applied|yesno:"Ya,Tidak" }}</strong>
+                &nbsp;|&nbsp;
+                <i class="bi bi-journal-text"></i>
+                Catatan: {{ latest_training.notes }}
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -455,7 +592,11 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Total Sampel</td>
-                            <td><span class="badge bg-success fs-6">{{ dataset_info.total_samples }}</span></td>
+                            <td>
+                                <span class="badge bg-success fs-6">
+                                    {% if latest_training %}{{ latest_training.total_samples }}{% else %}{{ dataset_info.total_samples }}{% endif %}
+                                </span>
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-muted">Setelah Augmentasi</td>
