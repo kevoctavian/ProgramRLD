@@ -1,0 +1,56 @@
+{% extends 'appsRLD/base.html' %}
+{% block title %}{{ disease.display_name }} - Info Penyakit Padi{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+
+                <!-- Gambar Referensi -->
+                {% if disease.reference_image %}
+                <img src="{{ disease.reference_image.url }}" class="card-img-top" alt="{{ disease.display_name }}" style="height: 300px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                    <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body">
+                    <h1 class="card-title mt-2">{{ disease.display_name }}</h1>
+
+                    {% if disease.severity_level > 0 %}
+                    <span class="badge {% if disease.severity_level == 3 %}bg-danger{% elif disease.severity_level == 2 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} mb-3">
+                        Tingkat Bahaya: {% if disease.severity_level == 3 %}Tinggi{% elif disease.severity_level == 2 %}Sedang{% else %}Rendah{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary mb-3">Tidak Berbahaya</span>
+                    {% endif %}
+
+                    <p>
+                        <strong>Total Kasus Terdeteksi:</strong> {{ diagnosis_count }} &nbsp;|&nbsp;
+                        <strong>Rata-rata Keyakinan:</strong> {{ avg_confidence|floatformat:1 }}%
+                    </p>
+
+                    <hr>
+
+                    <h5><i class="bi bi-journal-text text-success"></i> Keterangan</h5>
+                    <p>{{ disease.description }}</p>
+
+                    <h5><i class="bi bi-eye-fill text-warning"></i> Ciri-ciri & Gejala</h5>
+                    <p style="white-space: pre-line;">{{ disease.symptoms }}</p>
+
+                    <h5><i class="bi bi-bug-fill text-danger"></i> Penyebab</h5>
+                    <p style="white-space: pre-line;">{{ disease.causes }}</p>
+
+                    <h5><i class="bi bi-shield-fill-check text-primary"></i> Cara Penanganan & Pencegahan</h5>
+                    <p style="white-space: pre-line;">{{ disease.treatment }}</p>
+
+                    <a href="{% url 'appsRLD:disease_list' %}" class="btn btn-secondary mt-3">
+                        <i class="bi bi-arrow-left"></i> Kembali ke Daftar Penyakit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

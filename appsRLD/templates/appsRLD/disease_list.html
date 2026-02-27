@@ -1,0 +1,53 @@
+{% extends 'appsRLD/base.html' %}
+
+{% block title %}Info Penyakit Padi - Cek Penyakit Padi{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+    <div class="text-center mb-5 fade-in-up">
+        <h1><i class="bi bi-info-circle-fill text-success"></i> Info Penyakit Padi</h1>
+        <p class="lead text-muted">Kenali jenis-jenis penyakit pada daun padi dan cara mengatasinya</p>
+    </div>
+    
+    <div class="row g-4">
+        {% for disease in diseases %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 fade-in-up">
+                {% if disease.reference_image %}
+                <img src="{{ disease.reference_image.url }}" class="card-img-top" alt="{{ disease.display_name }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ disease.display_name }}</h5>
+                    <p class="card-text">{{ disease.description|truncatewords:20 }}</p>
+                    
+                    <div class="mb-3">
+                        {% if disease.severity_level == 3 %}
+                        <span class="badge bg-danger">Tingkat Bahaya: Tinggi</span>
+                        {% elif disease.severity_level == 2 %}
+                        <span class="badge bg-warning text-dark">Tingkat Bahaya: Sedang</span>
+                        {% elif disease.severity_level == 1 %}
+                        <span class="badge bg-info text-dark">Tingkat Bahaya: Rendah</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Tidak Berbahaya</span>
+                        {% endif %}
+                        
+                        <span class="badge bg-primary">{{ disease.diagnosis_count }} kasus terdeteksi</span>
+                    </div>
+                    
+                    <a href="{% url 'appsRLD:disease_detail' disease.id %}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-right-circle"></i> Lihat Selengkapnya
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

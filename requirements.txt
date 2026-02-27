@@ -1,0 +1,28 @@
+# Django Core
+Django==5.2
+psycopg2-binary>=2.9.10
+
+# Machine Learning
+scikit-learn==1.5.2
+imbalanced-learn==0.12.4
+numpy==1.26.4
+scipy==1.14.1
+
+# Image Processing
+opencv-python==4.10.0.84
+scikit-image==0.24.0
+Pillow==11.0.0
+
+# Model Persistence
+joblib==1.4.2
+
+# Visualization
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Utilities
+python-decouple==3.8
+
+# Production (optional)
+gunicorn==23.0.0
+whitenoise==6.8.2
