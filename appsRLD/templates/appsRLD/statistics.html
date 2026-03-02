@@ -24,28 +24,28 @@
         <div class="col-md-3">
             <div class="stat-card">
                 <i class="bi bi-images text-primary"></i>
-                <h3>{{ stats.total_images_uploaded }}</h3>
+                <h3>{{ total_images|default:0 }}</h3>
                 <p>Total Foto Diunggah</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-card">
                 <i class="bi bi-check-circle text-success"></i>
-                <h3>{{ stats.total_diagnoses }}</h3>
+                <h3>{{ total_diagnoses|default:0 }}</h3>
                 <p>Total Hasil Deteksi</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-card">
                 <i class="bi bi-speedometer text-info"></i>
-                <h3>{{ stats.average_confidence|floatformat:1 }}%</h3>
+                <h3>{{ avg_confidence|floatformat:1 }}%</h3>
                 <p>Rata-rata Keyakinan</p>
             </div>
         </div>
         <div class="col-md-3">
             <div class="stat-card">
                 <i class="bi bi-clock text-warning"></i>
-                <h3>{{ stats.average_processing_time|floatformat:2 }}s</h3>
+                <h3>{{ avg_processing_time|floatformat:2 }}s</h3>
                 <p>Rata-rata Waktu Proses</p>
             </div>
         </div>

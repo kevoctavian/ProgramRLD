@@ -22,6 +22,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
 import base64
+from flask import request
 import joblib
 from .models import (
     RiceLeafImage,
@@ -53,47 +54,72 @@ except Exception as e:
     print(f"⚠ Error loading model: {e}")
 
 # ========== HOME PAGE ==========
-class HomeView(TemplateView):
-    """
-    Homepage dengan overview dan quick stats
-    """
+class HomeView(LoginRequiredMixin, TemplateView):
     template_name = 'appsRLD/home.html'
     login_url = '/login/'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        stats = SystemStatistics.get_stats()
-        stats.update_statistics()
-
-        # Get model accuracy from latest training
         try:
             from .models import ModelTrainingHistory
             latest_training = ModelTrainingHistory.objects.filter(
                 is_active=True
             ).order_by('-trained_at').first()
-            
             model_accuracy = latest_training.accuracy if latest_training else 0
-        except Exception as e:
-            print(f"Error getting model accuracy: {e}")
+        except Exception:
             model_accuracy = 0
 
-        recent_diagnoses = DiagnosisResult.objects.select_related(
-            'image', 'predicted_disease'
-        ).order_by('-diagnosed_at')[:6]
+        # Base queryset per user
+        if self.request.user.is_staff:
+            base_qs = DiagnosisResult.objects.select_related('image', 'predicted_disease')
+        else:
+            base_qs = DiagnosisResult.objects.select_related(
+                'image', 'predicted_disease'
+            ).filter(image__user=self.request.user)
 
-        disease_distribution = DiagnosisResult.objects.filter(
+        recent_diagnoses = base_qs.order_by('-diagnosed_at')[:6]
+
+        disease_distribution = base_qs.filter(
             predicted_disease__isnull=False
         ).values(
             'predicted_disease__display_name'
         ).annotate(count=Count('id')).order_by('-count')
 
+        # Statistik manual per user
+        from django.db.models import Avg
+        total_images = base_qs.values('image').distinct().count()
+        total_diagnoses = base_qs.count()
+        avg_confidence = base_qs.aggregate(
+            avg=Avg('max_confidence')
+        )['avg'] or 0
+        avg_processing_time = base_qs.aggregate(
+            avg=Avg('total_time')
+        )['avg'] or 0
+
         context.update({
-            'stats': stats,
             'model_accuracy': model_accuracy,
             'recent_diagnoses': recent_diagnoses,
             'disease_distribution': list(disease_distribution),
-            'model_loaded': pipeline.model is not None
+            'model_loaded': pipeline.model is not None,
+            # Statistik per user
+            'total_images': total_images,
+            'total_diagnoses': total_diagnoses,
+            'avg_confidence': round(avg_confidence, 2),
+            'avg_processing_time': round(avg_processing_time, 4),
+            # Per penyakit
+            'total_bacterial_blight': base_qs.filter(
+                predicted_disease__name='bacterial_blight'
+            ).count(),
+            'total_rice_blast': base_qs.filter(
+                predicted_disease__name='rice_blast'
+            ).count(),
+            'total_tungro': base_qs.filter(
+                predicted_disease__name='tungro'
+            ).count(),
+            'total_healthy': base_qs.filter(
+                predicted_disease__name='healthy'
+            ).count(),
         })
         return context
 
@@ -343,10 +369,7 @@ class CameraCaptureDiagnoseView(LoginRequiredMixin, View):
             return redirect('appsRLD:upload')
 
 # ========== DIAGNOSIS RESULT ==========
-class DiagnosisResultView(View):
-    """
-    Tampilkan hasil diagnosis
-    """
+class DiagnosisResultView(LoginRequiredMixin, View):
     template_name = 'appsRLD/result.html'
     login_url = '/login/'
 
@@ -357,6 +380,15 @@ class DiagnosisResultView(View):
             ),
             id=diagnosis_id
         )
+
+        # Cek kepemilikan
+        is_owner = (
+            diagnosis.image.user and
+            diagnosis.image.user == request.user
+        )
+        if not (request.user.is_staff or is_owner):
+            messages.error(request, "Anda tidak memiliki akses ke diagnosis ini.")
+            return redirect('appsRLD:history')
 
         try:
             glcm_features = diagnosis.image.glcm_features
@@ -375,8 +407,17 @@ class DiagnosisResultView(View):
 
     def post(self, request, diagnosis_id):
         diagnosis = get_object_or_404(DiagnosisResult, id=diagnosis_id)
-        feedback_form = FeedbackForm(request.POST, instance=diagnosis)
 
+        # Cek kepemilikan
+        is_owner = (
+            diagnosis.image.user and
+            diagnosis.image.user == request.user
+        )
+        if not (request.user.is_staff or is_owner):
+            messages.error(request, "Anda tidak memiliki akses ke diagnosis ini.")
+            return redirect('appsRLD:history')
+
+        feedback_form = FeedbackForm(request.POST, instance=diagnosis)
         if feedback_form.is_valid():
             feedback_form.save()
             messages.success(request, "Terima kasih atas feedback Anda!")
@@ -404,9 +445,15 @@ class DiagnosisHistoryView(View):
     login_url = '/login/'
 
     def get(self, request):
-        diagnoses = DiagnosisResult.objects.select_related(
-            'image', 'predicted_disease'
-        ).order_by('-diagnosed_at')
+        # Filter berdasarkan user
+        if request.user.is_staff:
+            diagnoses = DiagnosisResult.objects.select_related(
+                'image', 'predicted_disease'
+            ).order_by('-diagnosed_at')
+        else:
+            diagnoses = DiagnosisResult.objects.select_related(
+                'image', 'predicted_disease'
+            ).filter(image__user=request.user).order_by('-diagnosed_at')
 
         search_form = SearchForm(request.GET)
 
@@ -471,59 +518,71 @@ class DeleteDiagnosisView(View):
         return redirect('appsRLD:history')
 
 # ========== CLEAR ALL HISTORY ==========
-class ClearAllHistoryView(View):
-    """
-    Hapus semua history diagnosis (admin only atau confirm)
-    """
+class ClearAllHistoryView(LoginRequiredMixin, View):
+    login_url = '/login/'
+
     def post(self, request):
-        # Check if user confirmed
         confirm = request.POST.get('confirm', '')
-        
+
         if confirm != 'HAPUS':
             messages.error(request, "Konfirmasi gagal. Ketik 'HAPUS' untuk menghapus semua data.")
             return redirect('appsRLD:history')
-        
-        # Delete all diagnoses and images
+
         try:
-            diagnosis_count = DiagnosisResult.objects.count()
-            image_count = RiceLeafImage.objects.count()
-            
-            DiagnosisResult.objects.all().delete()
-            RiceLeafImage.objects.all().delete()
-            
-            # Update statistics
+            if request.user.is_staff:
+                diagnosis_count = DiagnosisResult.objects.count()
+                DiagnosisResult.objects.all().delete()
+                RiceLeafImage.objects.all().delete()
+            else:
+                # Hapus hanya milik user yang sedang login
+                diagnosis_count = DiagnosisResult.objects.filter(
+                    image__user=request.user
+                ).count()
+                DiagnosisResult.objects.filter(
+                    image__user=request.user
+                ).delete()
+                RiceLeafImage.objects.filter(
+                    user=request.user
+                ).delete()
+
             stats = SystemStatistics.get_stats()
             stats.update_statistics()
-            
+
             messages.success(
-                request, 
-                f"✓ Berhasil menghapus {diagnosis_count} diagnosis dan {image_count} images."
+                request,
+                f"✓ Berhasil menghapus {diagnosis_count} diagnosis dari riwayat Anda."
             )
         except Exception as e:
             messages.error(request, f"✗ Error: {str(e)}")
-        
+
         return redirect('appsRLD:history')
 
 # ========== DISEASE INFO ==========
-class DiseaseListView(ListView):
-    """
-    Tampilkan daftar semua penyakit
-    """
+class DiseaseListView(LoginRequiredMixin, ListView):
     model = DiseaseCategory
     template_name = 'appsRLD/disease_list.html'
     context_object_name = 'diseases'
     login_url = '/login/'
 
     def get_queryset(self):
-        return DiseaseCategory.objects.annotate(
-            diagnosis_count=Count('diagnoses')
-        ).order_by('name')
+        user = self.request.user
+
+        if user.is_staff:
+            # Admin lihat semua kasus
+            return DiseaseCategory.objects.annotate(
+                diagnosis_count=Count('diagnoses')
+            ).order_by('name')
+        else:
+            # User hanya lihat kasus miliknya
+            return DiseaseCategory.objects.annotate(
+                diagnosis_count=Count(
+                    'diagnoses',
+                    filter=Q(diagnoses__image__user=user)
+                )
+            ).order_by('name')
 
 
-class DiseaseDetailView(DetailView):
-    """
-    Tampilkan detail informasi penyakit
-    """
+class DiseaseDetailView(LoginRequiredMixin, DetailView):
     model = DiseaseCategory
     template_name = 'appsRLD/disease_detail.html'
     context_object_name = 'disease'
@@ -533,12 +592,20 @@ class DiseaseDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         disease = self.object
+        user = self.request.user
 
-        context['diagnosis_count'] = disease.diagnoses.count()
-        context['avg_confidence'] = disease.diagnoses.aggregate(
+        if user.is_staff:
+            # Admin lihat semua kasus
+            diagnoses = disease.diagnoses
+        else:
+            # User hanya lihat kasus miliknya
+            diagnoses = disease.diagnoses.filter(image__user=user)
+
+        context['diagnosis_count'] = diagnoses.count()
+        context['avg_confidence'] = diagnoses.aggregate(
             avg_conf=Avg('max_confidence')
         )['avg_conf'] or 0
-        context['recent_cases'] = disease.diagnoses.select_related(
+        context['recent_cases'] = diagnoses.select_related(
             'image'
         ).order_by('-diagnosed_at')[:5]
 
@@ -553,59 +620,95 @@ class StatisticsDashboardView(TemplateView):
     template_name = 'appsRLD/statistics.html'
     login_url = '/login/'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
 
-        stats = SystemStatistics.get_stats()
-        stats.update_statistics()
+    # Base queryset per user
+    if self.request.user.is_staff:
+        base_qs = DiagnosisResult.objects
+    else:
+        base_qs = DiagnosisResult.objects.filter(
+            image__user=self.request.user
+        )
 
-        disease_distribution = DiagnosisResult.objects.values(
-            'predicted_disease__display_name'
-        ).annotate(count=Count('id')).order_by('-count')
+    from django.db.models import Avg
+    # Hitung statistik manual per user
+    total_images = base_qs.values('image').distinct().count()
+    total_diagnoses = base_qs.count()
+    avg_confidence = base_qs.aggregate(avg=Avg('max_confidence'))['avg'] or 0
+    avg_time = base_qs.aggregate(avg=Avg('total_time'))['avg'] or 0
 
-        confidence_ranges = {
-            'Sangat Tinggi (90-100%)': DiagnosisResult.objects.filter(max_confidence__gte=90).count(),
-            'Tinggi (75-89%)': DiagnosisResult.objects.filter(max_confidence__gte=75, max_confidence__lt=90).count(),
-            'Sedang (60-74%)': DiagnosisResult.objects.filter(max_confidence__gte=60, max_confidence__lt=75).count(),
-            'Rendah (<60%)': DiagnosisResult.objects.filter(max_confidence__lt=60).count(),
+    disease_distribution = base_qs.filter(
+        predicted_disease__isnull=False
+    ).values(
+        'predicted_disease__display_name'
+    ).annotate(count=Count('id')).order_by('-count')
+
+    confidence_ranges = {
+        'Sangat Tinggi (90-100%)': base_qs.filter(max_confidence__gte=90).count(),
+        'Tinggi (75-89%)': base_qs.filter(
+            max_confidence__gte=75, max_confidence__lt=90
+        ).count(),
+        'Sedang (60-74%)': base_qs.filter(
+            max_confidence__gte=60, max_confidence__lt=75
+        ).count(),
+        'Rendah (<60%)': base_qs.filter(max_confidence__lt=60).count(),
+    }
+
+    six_months_ago = timezone.now() - timedelta(days=180)
+    monthly_data = base_qs.filter(
+        diagnosed_at__gte=six_months_ago
+    ).annotate(
+        month=TruncMonth('diagnosed_at')
+    ).values('month').annotate(count=Count('id')).order_by('month')
+
+    monthly_diagnoses = [
+        {
+            'month': item['month'].strftime('%Y-%m') if item['month'] else 'Unknown',
+            'count': item['count']
         }
+        for item in monthly_data
+    ]
 
-        six_months_ago = timezone.now() - timedelta(days=180)
-        monthly_data = DiagnosisResult.objects.filter(
-            diagnosed_at__gte=six_months_ago
-        ).annotate(
-            month=TruncMonth('diagnosed_at')
-        ).values('month').annotate(count=Count('id')).order_by('month')
+    this_month = timezone.now().replace(day=1)
+    top_diseases_month = base_qs.filter(
+        diagnosed_at__gte=this_month
+    ).values('predicted_disease__display_name').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
 
-        monthly_diagnoses = [
-            {
-                'month': item['month'].strftime('%Y-%m') if item['month'] else 'Unknown',
-                'count': item['count']
-            }
-            for item in monthly_data
-        ]
+    total_feedback = base_qs.exclude(is_correct__isnull=True).count()
+    correct_predictions = base_qs.filter(is_correct=True).count()
+    accuracy_rate = (
+        correct_predictions / total_feedback * 100
+    ) if total_feedback > 0 else 0
 
-        this_month = timezone.now().replace(day=1)
-        top_diseases_month = DiagnosisResult.objects.filter(
-            diagnosed_at__gte=this_month
-        ).values('predicted_disease__display_name').annotate(
-            count=Count('id')
-        ).order_by('-count')[:5]
-
-        total_feedback = DiagnosisResult.objects.exclude(is_correct__isnull=True).count()
-        correct_predictions = DiagnosisResult.objects.filter(is_correct=True).count()
-        accuracy_rate = (correct_predictions / total_feedback * 100) if total_feedback > 0 else 0
-
-        context.update({
-            'stats': stats,
-            'disease_distribution': json.dumps(list(disease_distribution)),
-            'confidence_ranges': confidence_ranges,
-            'monthly_diagnoses': json.dumps(monthly_diagnoses),
-            'top_diseases_month': top_diseases_month,
-            'total_feedback': total_feedback,
-            'accuracy_rate': accuracy_rate
-        })
-        return context
+    context.update({
+        'disease_distribution': json.dumps(list(disease_distribution)),
+        'confidence_ranges': confidence_ranges,
+        'monthly_diagnoses': json.dumps(monthly_diagnoses),
+        'top_diseases_month': top_diseases_month,
+        'total_feedback': total_feedback,
+        'accuracy_rate': accuracy_rate,
+        # Statistik per user (gantikan stats global)
+        'total_images': total_images,
+        'total_diagnoses': total_diagnoses,
+        'avg_confidence': round(avg_confidence, 2),
+        'avg_processing_time': round(avg_time, 4),
+        'total_bacterial_blight': base_qs.filter(
+            predicted_disease__name='bacterial_blight'
+        ).count(),
+        'total_rice_blast': base_qs.filter(
+            predicted_disease__name='rice_blast'
+        ).count(),
+        'total_tungro': base_qs.filter(
+            predicted_disease__name='tungro'
+        ).count(),
+        'total_healthy': base_qs.filter(
+            predicted_disease__name='healthy'
+        ).count(),
+    })
+    return context
 
 
 # ========== ABOUT ==========
@@ -977,25 +1080,27 @@ class ProfileView(LoginRequiredMixin, View):
 
 # ========== DELETE DIAGNOSIS ==========
 class DeleteDiagnosisView(LoginRequiredMixin, View):
-    """
-    Hapus diagnosis (untuk admin/user pemilik)
-    """
     login_url = '/login/'
 
     def get(self, request, diagnosis_id):
         diagnosis = get_object_or_404(DiagnosisResult, id=diagnosis_id)
 
-        if request.user.is_staff or (
-            diagnosis.image.user and diagnosis.image.user == request.user
-        ):
-            image = diagnosis.image
-            diagnosis.delete()
-            if image.diagnoses.count() == 0:
-                image.delete()
-            messages.success(request, "Diagnosis berhasil dihapus.")
-        else:
-            messages.error(request, "Anda tidak memiliki izin untuk menghapus diagnosis ini.")
+        # Cek kepemilikan
+        is_owner = (
+            diagnosis.image.user and
+            diagnosis.image.user == request.user
+        )
 
+        if not (request.user.is_staff or is_owner):
+            messages.error(request, "Anda tidak memiliki izin untuk menghapus diagnosis ini.")
+            return redirect('appsRLD:history')
+
+        image = diagnosis.image
+        diagnosis.delete()
+        if image.diagnoses.count() == 0:
+            image.delete()
+
+        messages.success(request, "✓ Diagnosis berhasil dihapus.")
         return redirect('appsRLD:history')
 
 

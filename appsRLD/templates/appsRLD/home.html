@@ -33,38 +33,31 @@
     </h2>
     
     <div class="row g-4">
-        <!-- Total Gambar -->
         <div class="col-md-3">
             <div class="stat-card fade-in-up">
                 <i class="bi bi-images text-primary"></i>
-                <h3>{{ stats.total_images_uploaded|default:0 }}</h3>
+                <h3>{{ total_images|default:0 }}</h3>
                 <p>Total Foto Diunggah</p>
             </div>
         </div>
-        
-        <!-- Total Diagnosa -->
         <div class="col-md-3">
             <div class="stat-card fade-in-up" style="animation-delay: 0.1s;">
                 <i class="bi bi-check-circle-fill text-success"></i>
-                <h3>{{ stats.total_diagnoses|default:0 }}</h3>
+                <h3>{{ total_diagnoses|default:0 }}</h3>
                 <p>Total Hasil Deteksi</p>
             </div>
         </div>
-        
-        <!-- Akurasi Model -->
         <div class="col-md-3">
             <div class="stat-card fade-in-up" style="animation-delay: 0.2s;">
                 <i class="bi bi-bullseye text-info"></i>
                 <h3>{{ model_accuracy|floatformat:1 }}%</h3>
-                <p>Tingkat Akurasi</p>
+                <p>Tingkat Akurasi Model</p>
             </div>
         </div>
-        
-        <!-- Rata-rata Waktu Proses -->
         <div class="col-md-3">
             <div class="stat-card fade-in-up" style="animation-delay: 0.3s;">
                 <i class="bi bi-clock-fill text-warning"></i>
-                <h3>{{ stats.average_processing_time|floatformat:2 }}s</h3>
+                <h3>{{ avg_processing_time|floatformat:2 }}s</h3>
                 <p>Rata-rata Waktu Proses</p>
             </div>
         </div>
