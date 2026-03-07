@@ -1,0 +1,232 @@
+{% extends 'appsRLD/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-stat-card {
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .admin-stat-card h3 { font-size: 2.5rem; font-weight: 800; margin: 0; }
+    .admin-stat-card p  { margin: 0.3rem 0 0; opacity: 0.9; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-speedometer2 text-warning" style="font-size:2.5rem;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Admin Dashboard</h2>
+            <small class="text-muted">Ringkasan seluruh aktivitas sistem</small>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#3498db,#2980b9);">
+                <i class="bi bi-people-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>{{ total_users }}</h3>
+                <p>Total User</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#2ecc71,#27ae60);">
+                <i class="bi bi-person-check-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>{{ active_users }}</h3>
+                <p>User Aktif</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+                <i class="bi bi-clipboard2-pulse-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>{{ total_diagnoses }}</h3>
+                <p>Total Diagnosis</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#f39c12,#e67e22);">
+                <i class="bi bi-images" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>{{ total_images }}</h3>
+                <p>Total Foto</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disease Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center border-danger border-2">
+                <div class="text-danger fw-bold fs-4">{{ total_bacterial_blight }}</div>
+                <small class="text-muted">Bacterial Blight</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center border-warning border-2">
+                <div class="text-warning fw-bold fs-4">{{ total_rice_blast }}</div>
+                <small class="text-muted">Rice Blast</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center border-info border-2">
+                <div class="text-info fw-bold fs-4">{{ total_tungro }}</div>
+                <small class="text-muted">Tungro</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center border-success border-2">
+                <div class="text-success fw-bold fs-4">{{ total_healthy }}</div>
+                <small class="text-muted">Healthy</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Grafik Bulanan -->
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-graph-up text-success"></i> Diagnosis per Bulan</h5>
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+        <!-- Grafik Penyakit -->
+        <div class="col-lg-4">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-info"></i> Sebaran Penyakit</h5>
+                <canvas id="diseaseChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- User Terbaru -->
+        <div class="col-lg-5">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person-plus-fill text-primary"></i> User Terbaru</h5>
+                    <a href="{% url 'appsRLD:admin_user_list' %}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Username</th>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'appsRLD:admin_user_detail' u.id %}" class="fw-semibold text-decoration-none">
+                                        {{ u.username }}
+                                    </a>
+                                </td>
+                                <td>{{ u.get_full_name|default:"-" }}</td>
+                                <td>
+                                    {% if u.is_active %}
+                                    <span class="badge bg-success">Aktif</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Nonaktif</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ u.date_joined|date:"d M Y" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada user</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnosis Terbaru -->
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clipboard2-pulse-fill text-danger"></i> Diagnosis Terbaru</h5>
+                    <a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="btn btn-sm btn-outline-danger">Lihat Semua</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Penyakit</th>
+                                <th>Confidence</th>
+                                <th>Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in recent_diagnoses %}
+                            <tr>
+                                <td><small class="fw-semibold">{{ d.image.user.username|default:"?" }}</small></td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ d.predicted_disease.display_name|default:"?" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold {% if d.max_confidence >= 80 %}text-success{% elif d.max_confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ d.max_confidence|floatformat:1 }}%
+                                    </span>
+                                </td>
+                                <td><small class="text-muted">{{ d.diagnosed_at|date:"d M, H:i" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada diagnosis</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Monthly Chart
+    var monthly = {{ monthly_diagnoses|safe }};
+    if (monthly.length) {
+        new Chart(document.getElementById('monthlyChart'), {
+            type: 'line',
+            data: {
+                labels: monthly.map(i => i.month),
+                datasets: [{
+                    label: 'Diagnosis',
+                    data: monthly.map(i => i.count),
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46,204,113,0.1)',
+                    fill: true, tension: 0.4, borderWidth: 2
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+    }
+
+    // Disease Chart
+    var dd = {{ disease_dist|safe }};
+    if (dd.length) {
+        new Chart(document.getElementById('diseaseChart'), {
+            type: 'doughnut',
+            data: {
+                labels: dd.map(i => i.predicted_disease__display_name),
+                datasets: [{ data: dd.map(i => i.count), backgroundColor: ['#e74c3c','#f39c12','#3498db','#2ecc71'], borderWidth: 2 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+});
+</script>
+{% endblock %}

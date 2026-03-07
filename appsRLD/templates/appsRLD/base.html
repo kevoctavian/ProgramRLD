@@ -262,7 +262,7 @@
 <body>
     
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <!-- <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{% url 'appsRLD:home' %}">
                 <i class="bi bi-arrow-through-heart-fill"></i>
@@ -308,46 +308,145 @@
                            href="{% url 'appsRLD:about' %}">
                             <i class="bi bi-book-fill"></i> Tentang Aplikasi
                         </a>
-                    </li>
-                    {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin/">
-                                <i class="bi bi-gear-fill"></i> Pengaturan
+                    </li> -->
+                    <!-- Navbar -->
+                    {% if user.is_authenticated and user.is_staff %}
+                    <!-- ===== NAVBAR ADMIN ===== -->
+                    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+                        <div class="container">
+                            <a class="navbar-brand" href="{% url 'appsRLD:admin_dashboard' %}">
+                                <i class="bi bi-shield-fill-check"></i> Admin Panel
                             </a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'appsRLD:profile' %}">
-                                        <i class="bi bi-person-fill"></i> Profil Saya
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="{% url 'appsRLD:logout' %}">
-                                        <i class="bi bi-box-arrow-right"></i> Keluar
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarNav">
+                                <ul class="navbar-nav ms-auto">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+                                        href="{% url 'appsRLD:admin_dashboard' %}">
+                                            <i class="bi bi-speedometer2"></i> Dashboard
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_user_list' %}active{% endif %}"
+                                        href="{% url 'appsRLD:admin_user_list' %}">
+                                            <i class="bi bi-people-fill"></i> Kelola User
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_diagnosis_list' %}active{% endif %}"
+                                        href="{% url 'appsRLD:admin_diagnosis_list' %}">
+                                            <i class="bi bi-clipboard2-pulse-fill"></i> Semua Diagnosis
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{% url 'appsRLD:statistics' %}">
+                                            <i class="bi bi-bar-chart-fill"></i> Statistik
+                                        </a>
+                                    </li>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-shield-fill-check text-warning"></i>
+                                            {{ user.first_name|default:user.username }}
+                                            <span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem;">ADMIN</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{% url 'appsRLD:logout' %}">
+                                                    <i class="bi bi-box-arrow-right"></i> Keluar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}"
-                            href="{% url 'appsRLD:login' %}">
-                                <i class="bi bi-box-arrow-in-right"></i> Masuk
+                    <!-- ===== NAVBAR USER BIASA ===== -->
+                    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+                        <div class="container">
+                            <a class="navbar-brand" href="{% url 'appsRLD:home' %}">
+                               🌾Rice Disease Classifier
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'register' %}active{% endif %}"
-                            href="{% url 'appsRLD:register' %}">
-                                <i class="bi bi-person-plus-fill"></i> Daftar
-                            </a>
-                        </li>
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarNav">
+                                <ul class="navbar-nav ms-auto">
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                                        href="{% url 'appsRLD:home' %}">
+                                            <i class="bi bi-house-fill"></i> Beranda
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'upload' %}active{% endif %}"
+                                        href="{% url 'appsRLD:upload' %}">
+                                            <i class="bi bi-cloud-upload-fill"></i> Foto & Deteksi
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
+                                        href="{% url 'appsRLD:history' %}">
+                                            <i class="bi bi-clock-history"></i> Riwayat
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'disease_list' %}active{% endif %}"
+                                        href="{% url 'appsRLD:disease_list' %}">
+                                            <i class="bi bi-info-circle-fill"></i> Info Penyakit
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}"
+                                        href="{% url 'appsRLD:statistics' %}">
+                                            <i class="bi bi-bar-chart-fill"></i> Statistik
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+                                        href="{% url 'appsRLD:about' %}">
+                                            <i class="bi bi-book-fill"></i> Tentang Aplikasi
+                                        </a>
+                                    </li>
+                                    {% if user.is_authenticated %}
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'appsRLD:profile' %}">
+                                                    <i class="bi bi-person-fill"></i> Profil Saya
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{% url 'appsRLD:logout' %}">
+                                                    <i class="bi bi-box-arrow-right"></i> Keluar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    {% else %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{% url 'appsRLD:login' %}">
+                                            <i class="bi bi-box-arrow-in-right"></i> Masuk
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{% url 'appsRLD:register' %}">
+                                            <i class="bi bi-person-plus-fill"></i> Daftar
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
                     {% endif %}
                 </ul>
             </div>

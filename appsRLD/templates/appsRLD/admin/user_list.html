@@ -1,0 +1,128 @@
+{% extends 'appsRLD/base.html' %}
+{% block title %}Kelola User - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-people-fill text-primary" style="font-size:2rem;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Kelola User</h2>
+            <small class="text-muted">{{ total_users }} user terdaftar</small>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <input type="text" name="search" value="{{ search }}"
+                       class="form-control" placeholder="Cari username, nama, email...">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- Semua Status --</option>
+                    <option value="active"   {% if status == 'active' %}selected{% endif %}>Aktif</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Nonaktif</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Cari
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'appsRLD:admin_user_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabel User -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>No</th>
+                        <th>Username</th>
+                        <th>Nama Lengkap</th>
+                        <th>Email</th>
+                        <th class="text-center">Diagnosis</th>
+                        <th>Terakhir Aktif</th>
+                        <th>Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in page_obj %}
+                    <tr>
+                        <td class="text-muted small">{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'appsRLD:admin_user_detail' u.id %}"
+                               class="fw-semibold text-decoration-none">
+                                {{ u.username }}
+                            </a>
+                        </td>
+                        <td>{{ u.get_full_name|default:"-" }}</td>
+                        <td><small class="text-muted">{{ u.email|default:"-" }}</small></td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ u.diagnosis_count }}</span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if u.last_diagnosis %}
+                                    {{ u.last_diagnosis|date:"d M Y" }}
+                                {% else %}
+                                    Belum ada
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                            <span class="badge bg-success">Aktif</span>
+                            {% else %}
+                            <span class="badge bg-danger">Nonaktif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'appsRLD:admin_user_detail' u.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size:2rem;"></i><br>Tidak ada user
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status }}">‹</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status }}">›</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'appsRLD/base.html' %}
+{% block title %}Detail User - {{ target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <a href="{% url 'appsRLD:admin_user_list' %}" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i> Kembali
+    </a>
+
+    <div class="row g-4">
+        <!-- Info User -->
+        <div class="col-lg-4">
+            <div class="card p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-circle text-primary" style="font-size:5rem;"></i>
+                </div>
+                <h4 class="fw-bold">{{ target_user.get_full_name|default:target_user.username }}</h4>
+                <p class="text-muted mb-1">@{{ target_user.username }}</p>
+                <p class="text-muted small mb-3">{{ target_user.email|default:"Tidak ada email" }}</p>
+
+                {% if target_user.is_active %}
+                <span class="badge bg-success fs-6 mb-3">Akun Aktif</span>
+                {% else %}
+                <span class="badge bg-danger fs-6 mb-3">Akun Nonaktif</span>
+                {% endif %}
+
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light">
+                            <div class="fw-bold text-primary fs-4">{{ total_diagnoses }}</div>
+                            <small class="text-muted">Diagnosis</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light">
+                            <div class="fw-bold text-success fs-4">{{ avg_confidence }}%</div>
+                            <small class="text-muted">Avg Confidence</small>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted small">
+                    Bergabung: {{ target_user.date_joined|date:"d M Y" }}
+                </p>
+
+                <!-- Tombol Toggle Aktif/Nonaktif -->
+                <form method="post" action="{% url 'appsRLD:admin_toggle_user' target_user.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn w-100 {% if target_user.is_active %}btn-danger{% else %}btn-success{% endif %}"
+                            onclick="return confirm('{% if target_user.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %} akun {{ target_user.username }}?')">
+                        <i class="bi bi-{% if target_user.is_active %}person-x-fill{% else %}person-check-fill{% endif %}"></i>
+                        {% if target_user.is_active %}Nonaktifkan Akun{% else %}Aktifkan Akun{% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Distribusi Penyakit -->
+            {% if disease_dist %}
+            <div class="card p-4 mt-3">
+                <h6 class="fw-bold mb-3">Penyakit yang Terdeteksi</h6>
+                {% for d in disease_dist %}
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">{{ d.predicted_disease__display_name }}</span>
+                    <span class="badge bg-secondary">{{ d.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Riwayat Diagnosis -->
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-clipboard2-pulse-fill text-danger"></i>
+                    Riwayat Diagnosis ({{ total_diagnoses }})
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Gambar</th>
+                                <th>Penyakit</th>
+                                <th>Confidence</th>
+                                <th>Waktu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in page_obj %}
+                            <tr>
+                                <td>
+                                    <img src="{{ d.image.image.url }}" alt=""
+                                         style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ d.predicted_disease.display_name|default:"?" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold {% if d.max_confidence >= 80 %}text-success{% elif d.max_confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ d.max_confidence|floatformat:1 }}%
+                                    </span>
+                                </td>
+                                <td><small class="text-muted">{{ d.diagnosed_at|date:"d M Y, H:i" }}</small></td>
+                                <td>
+                                    <a href="{% url 'appsRLD:result' d.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Belum ada diagnosis</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if page_obj.has_other_pages %}
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

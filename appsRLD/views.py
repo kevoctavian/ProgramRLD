@@ -15,7 +15,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Max
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.conf import settings
@@ -636,7 +636,9 @@ def get_context_data(self, **kwargs):
     total_images = base_qs.values('image').distinct().count()
     total_diagnoses = base_qs.count()
     avg_confidence = base_qs.aggregate(avg=Avg('max_confidence'))['avg'] or 0
-    avg_time = base_qs.aggregate(avg=Avg('total_time'))['avg'] or 0
+    avg_processing_time = base_qs.aggregate(
+            avg=Avg('total_time')
+        )['avg'] or 0
 
     disease_distribution = base_qs.filter(
         predicted_disease__isnull=False
@@ -694,7 +696,7 @@ def get_context_data(self, **kwargs):
         'total_images': total_images,
         'total_diagnoses': total_diagnoses,
         'avg_confidence': round(avg_confidence, 2),
-        'avg_processing_time': round(avg_time, 4),
+        'avg_processing_time': round(avg_processing_time, 4),
         'total_bacterial_blight': base_qs.filter(
             predicted_disease__name='bacterial_blight'
         ).count(),
@@ -1027,6 +1029,15 @@ class LoginView(View):
             next_url = request.GET.get('next', 'appsRLD:home')
             return redirect(next_url)
 
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            if user.is_staff:
+                return redirect('appsRLD:admin_dashboard')
+            messages.success(request, f"Selamat datang kembali, {user.first_name or user.username}!")
+            next_url = request.GET.get('next', 'appsRLD:home')
+            return redirect(next_url)
+        
         messages.error(request, "Username atau password salah.")
         return render(request, self.template_name, {'form': form})
 
@@ -1134,3 +1145,228 @@ class ApiQuickPredictView(View):
 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# ========== ADMIN MIXIN ==========
+class AdminRequiredMixin(LoginRequiredMixin):
+    """Hanya staff/admin yang boleh akses"""
+    login_url = '/login/'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not request.user.is_staff:
+            messages.error(request, "Anda tidak memiliki akses ke halaman admin.")
+            return redirect('appsRLD:home')
+        return super().dispatch(request, *args, **kwargs)
+    
+# ========== ADMIN DASHBOARD ==========
+class AdminDashboardView(AdminRequiredMixin, TemplateView):
+    template_name = 'appsRLD/admin/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        from django.contrib.auth.models import User
+        from django.db.models import Avg
+
+        # Statistik global
+        total_users     = User.objects.filter(is_staff=False).count()
+        active_users    = User.objects.filter(is_staff=False, is_active=True).count()
+        inactive_users  = User.objects.filter(is_staff=False, is_active=False).count()
+        total_diagnoses = DiagnosisResult.objects.count()
+        total_images    = RiceLeafImage.objects.count()
+        avg_confidence  = DiagnosisResult.objects.aggregate(
+            avg=Avg('max_confidence')
+        )['avg'] or 0
+
+        # Diagnosis per penyakit
+        disease_dist = DiagnosisResult.objects.filter(
+            predicted_disease__isnull=False
+        ).values('predicted_disease__display_name').annotate(
+            count=Count('id')
+        ).order_by('-count')
+
+        # User terbaru
+        recent_users = User.objects.filter(
+            is_staff=False
+        ).order_by('-date_joined')[:5]
+
+        # Diagnosis terbaru
+        recent_diagnoses = DiagnosisResult.objects.select_related(
+            'image', 'image__user', 'predicted_disease'
+        ).order_by('-diagnosed_at')[:10]
+
+        # Diagnosis per bulan (6 bulan terakhir)
+        six_months_ago = timezone.now() - timedelta(days=180)
+        monthly_data = DiagnosisResult.objects.filter(
+            diagnosed_at__gte=six_months_ago
+        ).annotate(
+            month=TruncMonth('diagnosed_at')
+        ).values('month').annotate(count=Count('id')).order_by('month')
+
+        monthly_diagnoses = [
+            {
+                'month': item['month'].strftime('%Y-%m') if item['month'] else '',
+                'count': item['count']
+            }
+            for item in monthly_data
+        ]
+
+        context.update({
+            'total_users':      total_users,
+            'active_users':     active_users,
+            'inactive_users':   inactive_users,
+            'total_diagnoses':  total_diagnoses,
+            'total_images':     total_images,
+            'avg_confidence':   round(avg_confidence, 2),
+            'disease_dist':     json.dumps(list(disease_dist)),
+            'recent_users':     recent_users,
+            'recent_diagnoses': recent_diagnoses,
+            'monthly_diagnoses': json.dumps(monthly_diagnoses),
+            'total_bacterial_blight': DiagnosisResult.objects.filter(predicted_disease__name='bacterial_blight').count(),
+            'total_rice_blast':       DiagnosisResult.objects.filter(predicted_disease__name='rice_blast').count(),
+            'total_tungro':           DiagnosisResult.objects.filter(predicted_disease__name='tungro').count(),
+            'total_healthy':          DiagnosisResult.objects.filter(predicted_disease__name='healthy').count(),
+        })
+        return context
+
+
+# ========== ADMIN USER LIST ==========
+class AdminUserListView(AdminRequiredMixin, View):
+    template_name = 'appsRLD/admin/user_list.html'
+
+    def get(self, request):
+        from django.contrib.auth.models import User
+        from django.db.models import Avg
+
+        search = request.GET.get('search', '')
+        status = request.GET.get('status', '')
+
+        users = User.objects.filter(is_staff=False).annotate(
+            diagnosis_count=Count('uploaded_images__diagnoses'),
+            last_diagnosis=Max('uploaded_images__diagnoses__diagnosed_at')
+        ).order_by('-date_joined')
+
+        if search:
+            users = users.filter(
+                Q(username__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search)
+            )
+        if status == 'active':
+            users = users.filter(is_active=True)
+        elif status == 'inactive':
+            users = users.filter(is_active=False)
+
+        paginator = Paginator(users, 15)
+        page_obj  = paginator.get_page(request.GET.get('page'))
+
+        return render(request, self.template_name, {
+            'page_obj': page_obj,
+            'search':   search,
+            'status':   status,
+            'total_users': users.count(),
+        })
+
+
+# ========== ADMIN USER DETAIL ==========
+class AdminUserDetailView(AdminRequiredMixin, View):
+    template_name = 'appsRLD/admin/user_detail.html'
+
+    def get(self, request, user_id):
+        from django.contrib.auth.models import User
+        from django.db.models import Avg
+
+        target_user = get_object_or_404(User, id=user_id, is_staff=False)
+
+        diagnoses = DiagnosisResult.objects.select_related(
+            'image', 'predicted_disease'
+        ).filter(image__user=target_user).order_by('-diagnosed_at')
+
+        stats = diagnoses.aggregate(
+            avg_conf=Avg('max_confidence'),
+            avg_time=Avg('total_time'),
+        )
+
+        disease_dist = diagnoses.filter(
+            predicted_disease__isnull=False
+        ).values('predicted_disease__display_name').annotate(
+            count=Count('id')
+        ).order_by('-count')
+
+        paginator = Paginator(diagnoses, 10)
+        page_obj  = paginator.get_page(request.GET.get('page'))
+
+        return render(request, self.template_name, {
+            'target_user':    target_user,
+            'page_obj':       page_obj,
+            'total_diagnoses': diagnoses.count(),
+            'avg_confidence': round(stats['avg_conf'] or 0, 2),
+            'avg_time':       round(stats['avg_time'] or 0, 4),
+            'disease_dist':   list(disease_dist),
+        })
+
+
+# ========== ADMIN TOGGLE USER ==========
+class AdminToggleUserView(AdminRequiredMixin, View):
+
+    def post(self, request, user_id):
+        from django.contrib.auth.models import User
+        target_user = get_object_or_404(User, id=user_id, is_staff=False)
+        target_user.is_active = not target_user.is_active
+        target_user.save()
+
+        status = "diaktifkan" if target_user.is_active else "dinonaktifkan"
+        messages.success(
+            request,
+            f"Akun {target_user.username} berhasil {status}."
+        )
+        return redirect('appsRLD:admin_user_detail', user_id=user_id)
+
+
+# ========== ADMIN DIAGNOSIS LIST ==========
+class AdminDiagnosisListView(AdminRequiredMixin, View):
+    template_name = 'appsRLD/admin/diagnosis_list.html'
+
+    def get(self, request):
+        search  = request.GET.get('search', '')
+        disease = request.GET.get('disease', '')
+
+        diagnoses = DiagnosisResult.objects.select_related(
+            'image', 'image__user', 'predicted_disease'
+        ).order_by('-diagnosed_at')
+
+        if search:
+            diagnoses = diagnoses.filter(
+                Q(image__user__username__icontains=search) |
+                Q(image__original_filename__icontains=search)
+            )
+        if disease:
+            diagnoses = diagnoses.filter(predicted_disease__name=disease)
+
+        paginator = Paginator(diagnoses, 15)
+        page_obj  = paginator.get_page(request.GET.get('page'))
+
+        disease_choices = DiseaseCategory.objects.all()
+
+        return render(request, self.template_name, {
+            'page_obj':        page_obj,
+            'search':          search,
+            'disease_filter':  disease,
+            'disease_choices': disease_choices,
+            'total_count':     diagnoses.count(),
+        })
+
+
+# ========== ADMIN DELETE DIAGNOSIS ==========
+class AdminDeleteDiagnosisView(AdminRequiredMixin, View):
+
+    def post(self, request, diagnosis_id):
+        diagnosis = get_object_or_404(DiagnosisResult, id=diagnosis_id)
+        image     = diagnosis.image
+        diagnosis.delete()
+        if image.diagnoses.count() == 0:
+            image.delete()
+        messages.success(request, "✓ Diagnosis berhasil dihapus.")
+        return redirect('appsRLD:admin_diagnosis_list')

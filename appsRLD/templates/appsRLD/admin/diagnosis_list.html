@@ -1,0 +1,126 @@
+{% extends 'appsRLD/base.html' %}
+{% block title %}Semua Diagnosis - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-clipboard2-pulse-fill text-danger" style="font-size:2rem;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Semua Diagnosis</h2>
+            <small class="text-muted">{{ total_count }} total diagnosis</small>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input type="text" name="search" value="{{ search }}"
+                       class="form-control" placeholder="Cari username atau nama file...">
+            </div>
+            <div class="col-md-3">
+                <select name="disease" class="form-select">
+                    <option value="">-- Semua Penyakit --</option>
+                    {% for d in disease_choices %}
+                    <option value="{{ d.name }}" {% if disease_filter == d.name %}selected{% endif %}>
+                        {{ d.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabel Diagnosis -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Gambar</th>
+                        <th>User</th>
+                        <th>Penyakit</th>
+                        <th>Confidence</th>
+                        <th>Waktu</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in page_obj %}
+                    <tr>
+                        <td class="text-muted small">{{ forloop.counter }}</td>
+                        <td>
+                            <img src="{{ d.image.image.url }}" alt=""
+                                 style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
+                        </td>
+                        <td>
+                            <a href="{% url 'appsRLD:admin_user_detail' d.image.user.id %}"
+                               class="fw-semibold text-decoration-none">
+                                {{ d.image.user.username|default:"?" }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ d.predicted_disease.display_name|default:"?" }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold {% if d.max_confidence >= 80 %}text-success{% elif d.max_confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ d.max_confidence|floatformat:1 }}%
+                            </span>
+                        </td>
+                        <td><small class="text-muted">{{ d.diagnosed_at|date:"d M Y, H:i" }}</small></td>
+                        <td class="text-center">
+                            <a href="{% url 'appsRLD:result' d.id %}"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <form method="post"
+                                  action="{% url 'appsRLD:admin_delete_diagnosis' d.id %}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Hapus diagnosis ini?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size:2rem;"></i><br>Tidak ada diagnosis
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&disease={{ disease_filter }}">‹</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&disease={{ disease_filter }}">›</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

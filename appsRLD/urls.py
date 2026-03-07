@@ -39,4 +39,12 @@ urlpatterns = [
 
     # API
     path('api/predict/', views.ApiQuickPredictView.as_view(), name='api_predict'),
+
+    # ===== ADMIN PANEL =====
+    path('admin-panel/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
+    path('admin-panel/users/', views.AdminUserListView.as_view(), name='admin_user_list'),
+    path('admin-panel/users/<int:user_id>/', views.AdminUserDetailView.as_view(), name='admin_user_detail'),
+    path('admin-panel/users/<int:user_id>/toggle/', views.AdminToggleUserView.as_view(), name='admin_toggle_user'),
+    path('admin-panel/diagnoses/', views.AdminDiagnosisListView.as_view(), name='admin_diagnosis_list'),
+    path('admin-panel/diagnoses/delete/<int:diagnosis_id>/', views.AdminDeleteDiagnosisView.as_view(), name='admin_delete_diagnosis'),
 ]
