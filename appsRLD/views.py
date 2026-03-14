@@ -171,6 +171,24 @@ class UploadAndDiagnoseView(View):
 
                 result = pipeline.predict_single_image(img)
 
+                if not result.get('is_valid_leaf', True):
+                    rice_image.image.delete(save=False)
+                    rice_image.delete()
+                    reasons = result.get('validation', {}).get('reasons', [])
+                    reason_str = ' '.join(reasons).lower()
+                    if any(k in reason_str for k in ['dokumen', 'kertas', 'teks', 'document', 'low_sat', 'garis lurus', 'hitam putih']):
+                        rejection_type = 'document'
+                    elif any(k in reason_str for k in ['poster', 'grafis', 'dominant_hue', 'mser', 'desain']):
+                        rejection_type = 'poster'
+                    elif any(k in reason_str for k in ['hewan', 'animal', 'katak', 'orange', 'biru jenuh', 'tidak wajar']):
+                        rejection_type = 'animal'
+                    elif any(k in reason_str for k in ['grayscale', 'abu', 'monokrom']):
+                        rejection_type = 'grayscale'
+                    else:
+                        rejection_type = 'unknown'
+                    from django.urls import reverse as _reverse
+                    return redirect(f"{_reverse('appsRLD:upload')}?rejected=1&type={rejection_type}")
+
                 GLCMFeatures.objects.create(
                     image=rice_image,
                     contrast_0=result['glcm_features']['contrast_0'],
@@ -235,8 +253,8 @@ class UploadAndDiagnoseView(View):
                 return redirect('appsRLD:result', diagnosis_id=diagnosis.id)
 
             except Exception as e:
-                messages.error(request, f"Error saat melakukan diagnosis: {str(e)}")
-                return redirect('appsRLD:upload')
+                from django.urls import reverse as _reverse
+                return redirect(f"{_reverse('appsRLD:upload')}?rejected=1&type=unknown")
 
         return render(request, self.template_name, {
             'form': form,
@@ -299,6 +317,25 @@ class CameraCaptureDiagnoseView(LoginRequiredMixin, View):
             image_file.seek(0)
             img = Image.open(image_file)
             result = pipeline.predict_single_image(img)
+
+            # Validasi daun padi
+            if not result.get('is_valid_leaf', True):
+                rice_image.image.delete(save=False)
+                rice_image.delete()
+                reasons = result.get('validation', {}).get('reasons', [])
+                reason_str = ' '.join(reasons).lower()
+                if any(k in reason_str for k in ['dokumen', 'kertas', 'teks', 'low_sat', 'garis lurus', 'hitam putih']):
+                    rejection_type = 'document'
+                elif any(k in reason_str for k in ['poster', 'grafis', 'dominant_hue', 'mser']):
+                    rejection_type = 'poster'
+                elif any(k in reason_str for k in ['hewan', 'animal', 'katak', 'orange', 'tidak wajar']):
+                    rejection_type = 'animal'
+                elif any(k in reason_str for k in ['grayscale', 'abu', 'monokrom']):
+                    rejection_type = 'grayscale'
+                else:
+                    rejection_type = 'unknown'
+                from django.urls import reverse as _reverse
+                return redirect(f"{_reverse('appsRLD:upload')}?rejected=1&type={rejection_type}")
 
             # Simpan GLCM
             GLCMFeatures.objects.create(
@@ -365,8 +402,8 @@ class CameraCaptureDiagnoseView(LoginRequiredMixin, View):
             return redirect('appsRLD:result', diagnosis_id=diagnosis.id)
 
         except Exception as e:
-            messages.error(request, f"Error saat memproses foto kamera: {str(e)}")
-            return redirect('appsRLD:upload')
+            from django.urls import reverse as _reverse
+            return redirect(f"{_reverse('appsRLD:upload')}?rejected=1&type=unknown")
 
 # ========== DIAGNOSIS RESULT ==========
 class DiagnosisResultView(LoginRequiredMixin, View):
@@ -620,97 +657,97 @@ class StatisticsDashboardView(TemplateView):
     template_name = 'appsRLD/statistics.html'
     login_url = '/login/'
 
-def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    # Base queryset per user
-    if self.request.user.is_staff:
-        base_qs = DiagnosisResult.objects
-    else:
-        base_qs = DiagnosisResult.objects.filter(
-            image__user=self.request.user
-        )
+        # Base queryset per user
+        if self.request.user.is_staff:
+            base_qs = DiagnosisResult.objects
+        else:
+            base_qs = DiagnosisResult.objects.filter(
+                image__user=self.request.user
+            )
 
-    from django.db.models import Avg
-    # Hitung statistik manual per user
-    total_images = base_qs.values('image').distinct().count()
-    total_diagnoses = base_qs.count()
-    avg_confidence = base_qs.aggregate(avg=Avg('max_confidence'))['avg'] or 0
-    avg_processing_time = base_qs.aggregate(
-            avg=Avg('total_time')
-        )['avg'] or 0
+        from django.db.models import Avg
+        # Hitung statistik manual per user
+        total_images = base_qs.values('image').distinct().count()
+        total_diagnoses = base_qs.count()
+        avg_confidence = base_qs.aggregate(avg=Avg('max_confidence'))['avg'] or 0
+        avg_processing_time = base_qs.aggregate(
+                avg=Avg('total_time')
+            )['avg'] or 0
 
-    disease_distribution = base_qs.filter(
-        predicted_disease__isnull=False
-    ).values(
-        'predicted_disease__display_name'
-    ).annotate(count=Count('id')).order_by('-count')
+        disease_distribution = base_qs.filter(
+            predicted_disease__isnull=False
+        ).values(
+            'predicted_disease__display_name'
+        ).annotate(count=Count('id')).order_by('-count')
 
-    confidence_ranges = {
-        'Sangat Tinggi (90-100%)': base_qs.filter(max_confidence__gte=90).count(),
-        'Tinggi (75-89%)': base_qs.filter(
-            max_confidence__gte=75, max_confidence__lt=90
-        ).count(),
-        'Sedang (60-74%)': base_qs.filter(
-            max_confidence__gte=60, max_confidence__lt=75
-        ).count(),
-        'Rendah (<60%)': base_qs.filter(max_confidence__lt=60).count(),
-    }
-
-    six_months_ago = timezone.now() - timedelta(days=180)
-    monthly_data = base_qs.filter(
-        diagnosed_at__gte=six_months_ago
-    ).annotate(
-        month=TruncMonth('diagnosed_at')
-    ).values('month').annotate(count=Count('id')).order_by('month')
-
-    monthly_diagnoses = [
-        {
-            'month': item['month'].strftime('%Y-%m') if item['month'] else 'Unknown',
-            'count': item['count']
+        confidence_ranges = {
+            'Sangat Tinggi (90-100%)': base_qs.filter(max_confidence__gte=90).count(),
+            'Tinggi (75-89%)': base_qs.filter(
+                max_confidence__gte=75, max_confidence__lt=90
+            ).count(),
+            'Sedang (60-74%)': base_qs.filter(
+                max_confidence__gte=60, max_confidence__lt=75
+            ).count(),
+            'Rendah (<60%)': base_qs.filter(max_confidence__lt=60).count(),
         }
-        for item in monthly_data
-    ]
 
-    this_month = timezone.now().replace(day=1)
-    top_diseases_month = base_qs.filter(
-        diagnosed_at__gte=this_month
-    ).values('predicted_disease__display_name').annotate(
-        count=Count('id')
-    ).order_by('-count')[:5]
+        six_months_ago = timezone.now() - timedelta(days=180)
+        monthly_data = base_qs.filter(
+            diagnosed_at__gte=six_months_ago
+        ).annotate(
+            month=TruncMonth('diagnosed_at')
+        ).values('month').annotate(count=Count('id')).order_by('month')
 
-    total_feedback = base_qs.exclude(is_correct__isnull=True).count()
-    correct_predictions = base_qs.filter(is_correct=True).count()
-    accuracy_rate = (
-        correct_predictions / total_feedback * 100
-    ) if total_feedback > 0 else 0
+        monthly_diagnoses = [
+            {
+                'month': item['month'].strftime('%Y-%m') if item['month'] else 'Unknown',
+                'count': item['count']
+            }
+            for item in monthly_data
+        ]
 
-    context.update({
-        'disease_distribution': json.dumps(list(disease_distribution)),
-        'confidence_ranges': confidence_ranges,
-        'monthly_diagnoses': json.dumps(monthly_diagnoses),
-        'top_diseases_month': top_diseases_month,
-        'total_feedback': total_feedback,
-        'accuracy_rate': accuracy_rate,
-        # Statistik per user (gantikan stats global)
-        'total_images': total_images,
-        'total_diagnoses': total_diagnoses,
-        'avg_confidence': round(avg_confidence, 2),
-        'avg_processing_time': round(avg_processing_time, 4),
-        'total_bacterial_blight': base_qs.filter(
-            predicted_disease__name='bacterial_blight'
-        ).count(),
-        'total_rice_blast': base_qs.filter(
-            predicted_disease__name='rice_blast'
-        ).count(),
-        'total_tungro': base_qs.filter(
-            predicted_disease__name='tungro'
-        ).count(),
-        'total_healthy': base_qs.filter(
-            predicted_disease__name='healthy'
-        ).count(),
-    })
-    return context
+        this_month = timezone.now().replace(day=1)
+        top_diseases_month = base_qs.filter(
+            diagnosed_at__gte=this_month
+        ).values('predicted_disease__display_name').annotate(
+            count=Count('id')
+        ).order_by('-count')[:5]
+
+        total_feedback = base_qs.exclude(is_correct__isnull=True).count()
+        correct_predictions = base_qs.filter(is_correct=True).count()
+        accuracy_rate = (
+            correct_predictions / total_feedback * 100
+        ) if total_feedback > 0 else 0
+
+        context.update({
+            'disease_distribution': json.dumps(list(disease_distribution)),
+            'confidence_ranges': confidence_ranges,
+            'monthly_diagnoses': json.dumps(monthly_diagnoses),
+            'top_diseases_month': top_diseases_month,
+            'total_feedback': total_feedback,
+            'accuracy_rate': accuracy_rate,
+            # Statistik per user (gantikan stats global)
+            'total_images': total_images,
+            'total_diagnoses': total_diagnoses,
+            'avg_confidence': round(avg_confidence, 2),
+            'avg_processing_time': round(avg_processing_time, 4),
+            'total_bacterial_blight': base_qs.filter(
+                predicted_disease__name='bacterial_blight'
+            ).count(),
+            'total_rice_blast': base_qs.filter(
+                predicted_disease__name='rice_blast'
+            ).count(),
+            'total_tungro': base_qs.filter(
+                predicted_disease__name='tungro'
+            ).count(),
+            'total_healthy': base_qs.filter(
+                predicted_disease__name='healthy'
+            ).count(),
+        })
+        return context
 
 
 # ========== ABOUT ==========
@@ -820,13 +857,6 @@ class AboutView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # =====================================================================
-        # Ambil data training terbaru dari database (diisi otomatis saat training)
-        # Field yang tersedia: accuracy, precision, recall, f1_score,
-        #   total_samples, training_samples, validation_samples, test_samples,
-        #   samples_after_smote, training_duration, smote_applied, notes,
-        #   model_name, version, created_at
-        # =====================================================================
         try:
             from appsRLD.models import ModelTrainingHistory
             latest_training = ModelTrainingHistory.objects.filter(is_active=True).first()
@@ -836,42 +866,12 @@ class AboutView(LoginRequiredMixin, TemplateView):
         context['latest_training'] = latest_training
 
         # =====================================================================
-        # Alur Sistem
+        # Visualisasi
         # =====================================================================
-        context['flow_steps'] = [
-            {'number': 1, 'label': 'Input',            'desc': 'Gambar daun padi (upload / kamera)'},
-            {'number': 2, 'label': 'Preprocessing',    'desc': 'Resize → Grayscale → Gaussian → Normalize'},
-            {'number': 3, 'label': 'Ekstraksi Fitur',  'desc': 'GLCM + Color (HSV/LAB) + LBP = 92 fitur'},
-            {'number': 4, 'label': 'Klasifikasi',      'desc': 'Voting Ensemble (RF + ET + GB)'},
-            {'number': 5, 'label': 'Output',           'desc': 'Jenis penyakit + confidence score'},
-        ]
-
-        # =====================================================================
-        # Metodologi
-        # =====================================================================
-        context['methodology'] = {
-            'preprocessing': [
-                {'icon': 'bi-arrows-angle-contract', 'title': 'Resizing',           'desc': 'Mengubah ukuran gambar menjadi 256×256 piksel untuk konsistensi input model.'},
-                {'icon': 'bi-circle-half',           'title': 'Grayscale',          'desc': 'Mengkonversi gambar RGB ke grayscale untuk menyederhanakan analisis tekstur.'},
-                {'icon': 'bi-wind',                  'title': 'Gaussian Filter',    'desc': 'Mengurangi noise pada gambar menggunakan kernel 5×5 untuk hasil ekstraksi fitur yang lebih bersih.'},
-                {'icon': 'bi-sliders',               'title': 'Normalisasi',        'desc': 'Menormalkan nilai piksel ke rentang 0–255 agar fitur GLCM lebih stabil.'},
-            ],
-            'feature_extraction': [
-                {'icon': 'bi-grid-3x3',    'title': 'GLCM (24 Fitur)',        'desc': 'Gray Level Co-occurrence Matrix pada 4 sudut (0°, 45°, 90°, 135°): Contrast, Dissimilarity, Homogeneity, Energy, Correlation, ASM.'},
-                {'icon': 'bi-palette-fill','title': 'Color Features (39 Fitur)', 'desc': 'Fitur warna dari ruang warna HSV dan LAB: mean, std, skewness per channel + histogram BGR 8 bins.'},
-                {'icon': 'bi-layout-wtf',  'title': 'LBP (29 Fitur)',         'desc': 'Local Binary Pattern dengan radius=3, n_points=24: histogram uniform LBP + statistik mean, std, entropy.'},
-            ],
-            'handling_imbalanced': [
-                {'icon': 'bi-bezier2',        'title': 'BorderlineSMOTE', 'desc': 'Synthetic Minority Over-sampling Technique versi Borderline untuk menghasilkan sampel sintetis yang lebih representatif di batas keputusan.'},
-                {'icon': 'bi-arrow-left-right','title': 'Data Augmentasi', 'desc': 'Flip horizontal/vertikal, rotasi 90°/180°, dan variasi brightness untuk kelas minoritas (Bacterial Blight & Tungro).'},
-            ],
-            'classification': [
-                {'icon': 'bi-tree-fill',       'title': 'Random Forest',        'desc': 'Ensemble 500 decision trees dengan max_features=sqrt dan class_weight=balanced.'},
-                {'icon': 'bi-diagram-3-fill',  'title': 'Extra Trees',          'desc': 'Extremely Randomized Trees dengan 800 estimators, lebih acak dari RF untuk mengurangi variance.'},
-                {'icon': 'bi-graph-up-arrow',  'title': 'Gradient Boosting',    'desc': 'Sequential boosting dengan 400 estimators, learning_rate=0.05, dan max_depth=6.'},
-                {'icon': 'bi-collection-fill', 'title': 'Voting Ensemble (Soft)','desc': 'Menggabungkan prediksi probabilitas dari RF + ET + GB menggunakan soft voting untuk akurasi optimal.'},
-            ],
-        }
+        import os
+        VIZ_DIR = os.path.join(settings.BASE_DIR, 'ml_models', 'visualizations')
+        context['confusion_matrix_exists'] = os.path.exists(os.path.join(VIZ_DIR, 'confusion_matrix.png'))
+        context['roc_curve_exists']        = os.path.exists(os.path.join(VIZ_DIR, 'roc_curve.png'))
 
         # =====================================================================
         # Dataset
@@ -879,7 +879,6 @@ class AboutView(LoginRequiredMixin, TemplateView):
         context['dataset_info'] = {
             'name': 'Rice Leaf and Crop Disease Detection Dataset',
             'source': 'Mendeley Data',
-            # Gunakan total_samples dari DB jika tersedia, fallback ke nilai statis
             'total_samples': latest_training.total_samples if latest_training else '2,804',
             'augmented_samples': '~5,000+',
             'classes': 4,
@@ -893,22 +892,34 @@ class AboutView(LoginRequiredMixin, TemplateView):
 
         # =====================================================================
         # Performa Model
-        # Prioritaskan nilai dari DB (hasil training nyata),
-        # fallback ke nilai hardcoded jika DB kosong
         # =====================================================================
-        acc   = round(latest_training.accuracy,  1) if latest_training else 93
-        prec  = round(latest_training.precision, 1) if latest_training else 93
-        rec   = round(latest_training.recall,    1) if latest_training else 93
-        f1    = round(latest_training.f1_score,  1) if latest_training else 93
+        acc  = round(latest_training.accuracy,  1) if latest_training else 93
+        prec = round(latest_training.precision, 1) if latest_training else 93
+        rec  = round(latest_training.recall,    1) if latest_training else 93
+        f1   = round(latest_training.f1_score,  1) if latest_training else 93
+
+        # Per-class dari DB jika tersedia, fallback hardcoded
+        per_class_detail = latest_training.get_per_class_list() if latest_training else [
+            {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
+            {'name': 'Rice Blast',       'precision': 94, 'recall': 93, 'f1': 93, 'support': 135, 'color': 'warning'},
+            {'name': 'Tungro',           'precision': 91, 'recall': 90, 'f1': 91, 'support': 81,  'color': 'info'},
+            {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
+        ]
 
         context['model_performance'] = {
             'accuracy':  acc,
             'precision': prec,
             'recall':    rec,
             'f1_score':  f1,
-            # Per-class tetap statis karena classification report per-kelas
-            # tidak disimpan di ModelTrainingHistory
+            # Per-class untuk progress bar akurasi — ambil f1 dari per_class_detail
             'per_class': [
+                {
+                    'name':     cls['name'],
+                    'accuracy': cls['f1'],
+                    'color':    cls['color'],
+                }
+                for cls in per_class_detail
+            ] if per_class_detail else [
                 {'name': 'Bacterial Blight', 'accuracy': 89, 'color': 'danger'},
                 {'name': 'Rice Blast',       'accuracy': 94, 'color': 'warning'},
                 {'name': 'Tungro',           'accuracy': 91, 'color': 'info'},
@@ -918,36 +929,28 @@ class AboutView(LoginRequiredMixin, TemplateView):
 
         # =====================================================================
         # Training & Testing Scores
-        # Nilai agregat diambil dari DB jika tersedia
         # =====================================================================
-        total    = latest_training.total_samples       if latest_training else 2804
-        train_n  = latest_training.training_samples    if latest_training else 1963
-        val_n    = latest_training.validation_samples  if latest_training else 420
-        test_n   = latest_training.test_samples        if latest_training else 421
-        smote_n  = latest_training.samples_after_smote if latest_training else 2600
+        total   = latest_training.total_samples       if latest_training else 2804
+        train_n = latest_training.training_samples    if latest_training else 1963
+        val_n   = latest_training.validation_samples  if latest_training else 420
+        test_n  = latest_training.test_samples        if latest_training else 421
+        smote_n = latest_training.samples_after_smote if latest_training else 2600
 
-        # Validation accuracy tidak disimpan terpisah di DB —
-        # gunakan nilai hardcoded; testing accuracy dari DB
-        val_acc  = 84.76
-        test_acc = round(latest_training.accuracy,  2) if latest_training else 93.00
-        test_pre = round(latest_training.precision, 2) if latest_training else 93.00
-        test_rec = round(latest_training.recall,    2) if latest_training else 93.00
-        test_f1  = round(latest_training.f1_score,  2) if latest_training else 93.00
+        val_acc  = round(latest_training.val_accuracy, 2) if (latest_training and latest_training.val_accuracy) else 84.76
+        test_acc = round(latest_training.accuracy,     2) if latest_training else 93.00
+        test_pre = round(latest_training.precision,    2) if latest_training else 93.00
+        test_rec = round(latest_training.recall,       2) if latest_training else 93.00
+        test_f1  = round(latest_training.f1_score,     2) if latest_training else 93.00
 
         context['training_scores'] = {
             'train_val': [
-                {'label': 'Akurasi Validasi',    'value': val_acc,  'color': 'primary'},
-                {'label': 'Akurasi Pengujian',   'value': test_acc, 'color': 'success'},
-                {'label': 'Presisi Pengujian',   'value': test_pre, 'color': 'info'},
-                {'label': 'Recall Pengujian',    'value': test_rec, 'color': 'warning'},
-                {'label': 'F1-Score Pengujian',  'value': test_f1,  'color': 'danger'},
+                {'label': 'Akurasi Validasi',   'value': val_acc,  'color': 'primary'},
+                {'label': 'Akurasi Pengujian',  'value': test_acc, 'color': 'success'},
+                {'label': 'Presisi Pengujian',  'value': test_pre, 'color': 'info'},
+                {'label': 'Recall Pengujian',   'value': test_rec, 'color': 'warning'},
+                {'label': 'F1-Score Pengujian', 'value': test_f1,  'color': 'danger'},
             ],
-            'per_class_detail': [
-                {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
-                {'name': 'Rice Blast',       'precision': 94, 'recall': 93, 'f1': 93, 'support': 135, 'color': 'warning'},
-                {'name': 'Tungro',           'precision': 91, 'recall': 90, 'f1': 91, 'support': 81,  'color': 'info'},
-                {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
-            ],
+            'per_class_detail': per_class_detail,
             'split_info': {
                 'total':       total,
                 'train':       train_n,
@@ -1016,6 +1019,8 @@ class LoginView(View):
 
     def post(self, request):
         if request.user.is_authenticated:
+            if request.user.is_staff:
+                return redirect('appsRLD:admin_dashboard')
             return redirect('appsRLD:home')
 
         form = LoginForm(request, data=request.POST)
@@ -1026,18 +1031,11 @@ class LoginView(View):
                 request,
                 f"Selamat datang kembali, {user.first_name or user.username}!"
             )
+            if user.is_staff:
+                return redirect('appsRLD:admin_dashboard')
             next_url = request.GET.get('next', 'appsRLD:home')
             return redirect(next_url)
 
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            if user.is_staff:
-                return redirect('appsRLD:admin_dashboard')
-            messages.success(request, f"Selamat datang kembali, {user.first_name or user.username}!")
-            next_url = request.GET.get('next', 'appsRLD:home')
-            return redirect(next_url)
-        
         messages.error(request, "Username atau password salah.")
         return render(request, self.template_name, {'form': form})
 

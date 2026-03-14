@@ -1,0 +1,229 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+{% block title %}Semua Diagnosis - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-clipboard2-pulse-fill" style="font-size:2rem; color:#555;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Semua Diagnosis</h2>
+            <small class="text-muted">542 total diagnosis</small>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input type="text" name="search" value=""
+                       class="form-control" placeholder="Cari username atau nama file...">
+            </div>
+            <div class="col-md-3">
+                <select name="disease" class="form-select">
+                    <option value="">-- Semua Penyakit --</option>
+                    <option value="bacterial_blight">Bacterial Leaf Blight</option>
+                    <option value="rice_blast">Rice Blast</option>
+                    <option value="tungro">Tungro</option>
+                    <option value="healthy">Healthy</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn w-100"
+                        style="background:#333;color:#fff;">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="#" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabel Diagnosis -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background:#2c2c2c; color:#fff;">
+                    <tr>
+                        <th>#</th>
+                        <th>Gambar</th>
+                        <th>User</th>
+                        <th>Penyakit</th>
+                        <th>Confidence</th>
+                        <th>Waktu</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-muted small">1</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">budi123</span></td>
+                        <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                        <td><span class="fw-bold" style="color:#222;">92.4%</span></td>
+                        <td><small class="text-muted">12 Mar 2026, 08:14</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">2</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">siti_r</span></td>
+                        <td><span class="badge" style="background:#555;color:#fff;">Healthy</span></td>
+                        <td><span class="fw-bold" style="color:#444;">87.1%</span></td>
+                        <td><small class="text-muted">11 Mar 2026, 21:30</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">3</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">dewi99</span></td>
+                        <td><span class="badge" style="background:#555;color:#fff;">Tungro</span></td>
+                        <td><span class="fw-bold" style="color:#666;">74.8%</span></td>
+                        <td><small class="text-muted">11 Mar 2026, 15:22</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">4</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">reza_m</span></td>
+                        <td><span class="badge" style="background:#777;color:#fff;">Bacterial Blight</span></td>
+                        <td><span class="fw-bold" style="color:#888;">55.3%</span></td>
+                        <td><small class="text-muted">10 Mar 2026, 10:05</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">5</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">rina_k</span></td>
+                        <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                        <td><span class="fw-bold" style="color:#222;">95.0%</span></td>
+                        <td><small class="text-muted">09 Mar 2026, 09:47</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">6</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">agus_p</span></td>
+                        <td><span class="badge" style="background:#555;color:#fff;">Healthy</span></td>
+                        <td><span class="fw-bold" style="color:#444;">81.6%</span></td>
+                        <td><small class="text-muted">08 Mar 2026, 14:33</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">7</td>
+                        <td>
+                            <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                        display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                            </div>
+                        </td>
+                        <td><span class="fw-semibold" style="color:#222;">budi123</span></td>
+                        <td><span class="badge" style="background:#777;color:#fff;">Bacterial Blight</span></td>
+                        <td><span class="fw-bold" style="color:#666;">69.2%</span></td>
+                        <td><small class="text-muted">07 Mar 2026, 11:08</small></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item disabled">
+                        <span class="page-link">‹</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link"
+                              style="background:#333;border-color:#333;color:#fff;">1 / 37</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">›</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}

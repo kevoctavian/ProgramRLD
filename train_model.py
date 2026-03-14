@@ -500,6 +500,22 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
 
     # ========== STEP 7: DATABASE ==========
     try:
+        # Buat per-class metrics dari classification report
+        report = classification_report(
+            y_test, y_test_pred,
+            target_names=class_names,
+            output_dict=True
+        )
+        per_class = {
+            class_name: {
+                'precision': round(report[class_name]['precision'] * 100, 2),
+                'recall':    round(report[class_name]['recall']    * 100, 2),
+                'f1':        round(report[class_name]['f1-score']  * 100, 2),
+                'support':   int(report[class_name]['support']),
+            }
+            for class_name in class_names
+        }
+
         ModelTrainingHistory.objects.filter(is_active=True).update(is_active=False)
         ModelTrainingHistory.objects.create(
             model_name='Ensemble RF+ET+GB + Augmentasi',
@@ -515,12 +531,15 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
             precision=test_precision,
             recall=test_recall,
             f1_score=test_f1,
+            val_accuracy=val_acc,
+            per_class_metrics=per_class,
             training_duration=training_duration / 60,
             model_file_path=model_path,
             is_active=True,
             notes=f'GLCM+Color+LBP+Augmentasi, SMOTE: {smote_type}, Val: {val_acc:.2f}%'
         )
         print("✓ Training history saved to database")
+        print(f"  Per-class metrics saved: {list(per_class.keys())}")
     except Exception as e:
         print(f"⚠ Database save failed: {e}")
 

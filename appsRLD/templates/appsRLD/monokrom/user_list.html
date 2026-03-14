@@ -1,0 +1,194 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+{% block title %}Kelola User - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-people-fill" style="font-size:2rem; color:#555;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Kelola User</h2>
+            <small class="text-muted">128 user terdaftar</small>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <input type="text" name="search" value="{{ search }}"
+                       class="form-control" placeholder="Cari username, nama, email...">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- Semua Status --</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn w-100"
+                        style="background:#333;color:#fff;">
+                    <i class="bi bi-search"></i> Cari
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="#" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabel User -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background:#2c2c2c; color:#fff;">
+                    <tr>
+                        <th>No</th>
+                        <th>Username</th>
+                        <th>Nama Lengkap</th>
+                        <th>Email</th>
+                        <th class="text-center">Diagnosis</th>
+                        <th>Terakhir Aktif</th>
+                        <th>Status</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-muted small">1</td>
+                        <td><span class="fw-semibold" style="color:#222;">budi123</span></td>
+                        <td>Budi Santoso</td>
+                        <td><small class="text-muted">budi@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#444;color:#fff;">47</span>
+                        </td>
+                        <td><small class="text-muted">12 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">2</td>
+                        <td><span class="fw-semibold" style="color:#222;">siti_r</span></td>
+                        <td>Siti Rahayu</td>
+                        <td><small class="text-muted">siti@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#444;color:#fff;">35</span>
+                        </td>
+                        <td><small class="text-muted">11 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">3</td>
+                        <td><span class="fw-semibold" style="color:#222;">agus_p</span></td>
+                        <td>Agus Purnomo</td>
+                        <td><small class="text-muted">agus@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#888;color:#fff;">12</span>
+                        </td>
+                        <td><small class="text-muted">Belum ada</small></td>
+                        <td><span class="badge" style="background:#999;color:#fff;">Nonaktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">4</td>
+                        <td><span class="fw-semibold" style="color:#222;">dewi99</span></td>
+                        <td>Dewi Lestari</td>
+                        <td><small class="text-muted">dewi@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#444;color:#fff;">28</span>
+                        </td>
+                        <td><small class="text-muted">11 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">5</td>
+                        <td><span class="fw-semibold" style="color:#222;">reza_m</span></td>
+                        <td>Reza Mahendra</td>
+                        <td><small class="text-muted">reza@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#444;color:#fff;">19</span>
+                        </td>
+                        <td><small class="text-muted">10 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">6</td>
+                        <td><span class="fw-semibold" style="color:#222;">rina_k</span></td>
+                        <td>Rina Kusuma</td>
+                        <td><small class="text-muted">rina@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#444;color:#fff;">61</span>
+                        </td>
+                        <td><small class="text-muted">12 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">7</td>
+                        <td><span class="fw-semibold" style="color:#222;">hendra_w</span></td>
+                        <td>Hendra Wijaya</td>
+                        <td><small class="text-muted">hendra@email.com</small></td>
+                        <td class="text-center">
+                            <span class="badge" style="background:#888;color:#fff;">5</span>
+                        </td>
+                        <td><small class="text-muted">08 Mar 2026</small></td>
+                        <td><span class="badge" style="background:#999;color:#fff;">Nonaktif</span></td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item disabled">
+                        <span class="page-link">‹</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link"
+                              style="background:#333;border-color:#333;color:#fff;">1 / 9</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">›</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

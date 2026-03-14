@@ -1,0 +1,197 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+{% block title %}Detail User - budi123{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <a href="#" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left"></i> Kembali
+    </a>
+
+    <div class="row g-4">
+        <!-- Info User -->
+        <div class="col-lg-4">
+            <div class="card p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-circle" style="font-size:5rem; color:#555;"></i>
+                </div>
+                <h4 class="fw-bold">Budi Santoso</h4>
+                <p class="text-muted mb-1">@budi123</p>
+                <p class="text-muted small mb-3">budi@email.com</p>
+
+                <span class="badge fs-6 mb-3" style="background:#444;color:#fff;">Akun Aktif</span>
+
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded" style="background:#f0f0f0;">
+                            <div class="fw-bold fs-4" style="color:#222;">47</div>
+                            <small class="text-muted">Diagnosis</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded" style="background:#f0f0f0;">
+                            <div class="fw-bold fs-4" style="color:#444;">84.3%</div>
+                            <small class="text-muted">Avg Confidence</small>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted small">
+                    Bergabung: 10 Mar 2026
+                </p>
+
+                <!-- Tombol Toggle -->
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <button type="submit" class="btn w-100"
+                            style="background:#888;color:#fff;border:none;">
+                        <i class="bi bi-person-x-fill"></i> Nonaktifkan Akun
+                    </button>
+                </form>
+            </div>
+
+            <!-- Distribusi Penyakit -->
+            <div class="card p-4 mt-3">
+                <h6 class="fw-bold mb-3">Penyakit yang Terdeteksi</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Rice Blast</span>
+                    <span class="badge" style="background:#555;color:#fff;">18</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Healthy</span>
+                    <span class="badge" style="background:#777;color:#fff;">14</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Bacterial Blight</span>
+                    <span class="badge" style="background:#999;color:#fff;">9</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small">Tungro</span>
+                    <span class="badge" style="background:#bbb;color:#fff;">6</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Riwayat Diagnosis -->
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-clipboard2-pulse-fill" style="color:#555;"></i>
+                    Riwayat Diagnosis (47)
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Gambar</th>
+                                <th>Penyakit</th>
+                                <th>Confidence</th>
+                                <th>Waktu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                                display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                                <td><span class="fw-bold" style="color:#222;">92.4%</span></td>
+                                <td><small class="text-muted">12 Mar 2026, 08:14</small></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                                display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge" style="background:#555;color:#fff;">Healthy</span></td>
+                                <td><span class="fw-bold" style="color:#444;">87.1%</span></td>
+                                <td><small class="text-muted">11 Mar 2026, 21:30</small></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                                display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge" style="background:#555;color:#fff;">Tungro</span></td>
+                                <td><span class="fw-bold" style="color:#666;">74.8%</span></td>
+                                <td><small class="text-muted">11 Mar 2026, 15:22</small></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                                display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge" style="background:#777;color:#fff;">Bacterial Blight</span></td>
+                                <td><span class="fw-bold" style="color:#888;">55.3%</span></td>
+                                <td><small class="text-muted">10 Mar 2026, 10:05</small></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="width:50px;height:50px;border-radius:8px;background:#e0e0e0;
+                                                display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image" style="color:#aaa;font-size:1.2rem;"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                                <td><span class="fw-bold" style="color:#222;">95.0%</span></td>
+                                <td><small class="text-muted">09 Mar 2026, 09:47</small></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item disabled">
+                            <span class="page-link">‹</span>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link"
+                                  style="background:#333;border-color:#333;color:#fff;">1 / 5</span>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">›</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

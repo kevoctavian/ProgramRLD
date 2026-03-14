@@ -1,0 +1,45 @@
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('rejected') !== '1') return;
+
+    var type = params.get('type') || 'unknown';
+    var typeMap = {
+        document:  { label: 'Kertas / Dokumen',       color: '#d97706', bg: '#fef3c7' },
+        poster:    { label: 'Poster / Desain Grafis',  color: '#7c3aed', bg: '#ede9fe' },
+        animal:    { label: 'Hewan / Benda Lain',      color: '#db2777', bg: '#fce7f3' },
+        grayscale: { label: 'Foto Hitam-Putih',        color: '#6b7280', bg: '#f3f4f6' },
+        unknown:   { label: 'Gambar Tidak Dikenali',   color: '#ea580c', bg: '#fff7ed' },
+    };
+    var cfg = typeMap[type] || typeMap.unknown;
+
+    Swal.fire({
+        title: '<span style="color:#dc2626;font-size:1.3rem">&#9888; Gambar Tidak Valid!</span>',
+        html:
+            '<p style="color:#555;margin-bottom:12px">Gambar yang diupload bukan daun padi.</p>' +
+            '<div style="background:' + cfg.bg + ';border-radius:8px;padding:10px 14px;margin-bottom:14px;color:' + cfg.color + ';font-weight:600">' +
+                'Terdeteksi sebagai: ' + cfg.label +
+            '</div>' +
+            '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;text-align:left;font-size:0.85rem;color:#374151">' +
+                '<b style="color:#15803d">Tips foto yang benar:</b><br>' +
+                '&#10003; Foto daun padi secara langsung<br>' +
+                '&#10003; Pencahayaan cukup, tidak buram<br>' +
+                '&#10003; Boleh di atas kertas putih sebagai alas<br>' +
+                '&#10007; Jangan upload dokumen, poster, atau foto hewan' +
+            '</div>',
+        icon: 'error',
+        confirmButtonText: '&#8592; Coba Upload Lagi',
+        confirmButtonColor: '#dc2626',
+        width: 460,
+        didOpen: function () {
+            // Bersihkan query param dari URL
+            var url = new URL(window.location.href);
+            url.searchParams.delete('rejected');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, '', url.toString());
+        }
+    });
+})();
+</script>

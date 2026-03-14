@@ -1,0 +1,317 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+
+{% block title %}Hasil Deteksi - Cek Penyakit Padi{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-4 fade-in-up">
+        <h1>
+            <i class="bi bi-clipboard-check-fill" style="color:#444;"></i>
+            Hasil Deteksi
+        </h1>
+        <p class="text-muted">Hasil analisis foto daun padi Anda</p>
+    </div>
+
+    <div class="row">
+        <!-- Kolom Kiri -->
+        <div class="col-lg-5">
+            <!-- Foto -->
+            <div class="card mb-4 fade-in-up">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-image"></i> Foto yang Dianalisis</h5>
+                    <img src="{{ diagnosis.image.image.url }}" alt="Daun padi" class="img-fluid rounded" style="filter:grayscale(100%);">
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Nama File:</strong> {{ diagnosis.image.original_filename }}</p>
+                        <p class="mb-1"><strong>Ukuran:</strong> {{ diagnosis.image.file_size|filesizeformat }}</p>
+                        <p class="mb-1"><strong>Dimensi:</strong> {{ diagnosis.image.image_width }} × {{ diagnosis.image.image_height }} piksel</p>
+                        <p class="mb-0"><strong>Waktu Upload:</strong> {{ diagnosis.image.uploaded_at|date:"d M Y, H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waktu Proses -->
+            <div class="card mb-4 fade-in-up" style="animation-delay:0.1s;">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clock-fill" style="color:#555;"></i> Waktu Proses</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Persiapan gambar:</span>
+                            <strong>{{ diagnosis.preprocessing_time|floatformat:3 }} detik</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Proses deteksi:</span>
+                            <strong>{{ diagnosis.prediction_time|floatformat:3 }} detik</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Total:</strong></span>
+                            <strong style="color:#333;">{{ diagnosis.total_time|floatformat:3 }} detik</strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Kanan -->
+        <div class="col-lg-7">
+            <!-- Hasil Utama -->
+            <div class="card mb-4 fade-in-up" style="animation-delay:0.2s;">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-award-fill" style="color:#555;"></i> Penyakit yang Terdeteksi
+                    </h5>
+                    <div class="text-center py-4">
+                        <h2 style="color:#222;" class="mb-3">{{ diagnosis.predicted_disease.display_name }}</h2>
+                        <div class="mb-3">
+                            <span class="badge badge-confidence
+                                {% if diagnosis.max_confidence >= 80 %}confidence-high
+                                {% elif diagnosis.max_confidence >= 60 %}confidence-medium
+                                {% else %}confidence-low{% endif %}"
+                                style="font-size:1.4rem;padding:1rem 2rem;">
+                                Keyakinan {{ diagnosis.max_confidence|floatformat:2 }}%
+                            </span>
+                        </div>
+                        <p class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Tingkat Keyakinan: <strong>{{ diagnosis.get_confidence_level }}</strong>
+                        </p>
+                    </div>
+
+                    {% if diagnosis.predicted_disease.severity_level > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Tingkat Bahaya:</strong>
+                        {% if diagnosis.predicted_disease.severity_level == 3 %}Berat — Segera lakukan penanganan!
+                        {% elif diagnosis.predicted_disease.severity_level == 2 %}Sedang — Perlu perhatian lebih.
+                        {% else %}Ringan — Pantau perkembangannya.{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Grafik Keyakinan -->
+            <div class="card mb-4 fade-in-up" style="animation-delay:0.3s;">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-bar-chart-fill" style="color:#444;"></i> Perbandingan Keyakinan per Penyakit
+                    </h5>
+                    <canvas id="confidenceChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Informasi Penyakit -->
+            <div class="card mb-4 fade-in-up" style="animation-delay:0.4s;">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle-fill" style="color:#555;"></i> Informasi Penyakit
+                    </h5>
+                    {% if diagnosis.predicted_disease.description %}
+                    <div class="mb-3">
+                        <h6 style="color:#333;"><i class="bi bi-journal-text"></i> Keterangan</h6>
+                        <p>{{ diagnosis.predicted_disease.description }}</p>
+                    </div>
+                    {% endif %}
+                    {% if diagnosis.predicted_disease.symptoms %}
+                    <div class="mb-3">
+                        <h6 style="color:#333;"><i class="bi bi-eye-fill"></i> Ciri-ciri & Gejala</h6>
+                        <p style="white-space:pre-line;">{{ diagnosis.predicted_disease.symptoms }}</p>
+                    </div>
+                    {% endif %}
+                    {% if diagnosis.predicted_disease.causes %}
+                    <div class="mb-3">
+                        <h6 style="color:#333;"><i class="bi bi-bug-fill"></i> Penyebab</h6>
+                        <p style="white-space:pre-line;">{{ diagnosis.predicted_disease.causes }}</p>
+                    </div>
+                    {% endif %}
+                    {% if diagnosis.predicted_disease.treatment %}
+                    <div class="mb-3">
+                        <h6 style="color:#333;"><i class="bi bi-shield-fill-check"></i> Cara Penanganan & Pencegahan</h6>
+                        <p style="white-space:pre-line;">{{ diagnosis.predicted_disease.treatment }}</p>
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'appsRLD:disease_detail' diagnosis.predicted_disease.id %}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-right-circle"></i> Lihat Info Lengkap Penyakit
+                    </a>
+                </div>
+            </div>
+
+            <!-- Data Teknis GLCM -->
+            {% if glcm_features %}
+            <div class="card mb-4 fade-in-up" style="animation-delay:0.5s;">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-grid-3x3-gap-fill" style="color:#666;"></i> Data Teknis Analisis
+                        <button class="btn btn-sm btn-outline-secondary float-end" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#glcmCollapse">
+                            <i class="bi bi-chevron-down"></i> Tampilkan/Sembunyikan
+                        </button>
+                    </h5>
+                    <div class="collapse" id="glcmCollapse">
+                        <p class="text-muted small">Data fitur tekstur yang digunakan sistem untuk menganalisis gambar daun</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Fitur</th><th>0°</th><th>45°</th><th>90°</th><th>135°</th><th>Rata-rata</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Kontras</strong></td>
+                                        <td>{{ glcm_features.contrast_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.contrast_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.contrast_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.contrast_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.contrast_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Ketidakmiripan</strong></td>
+                                        <td>{{ glcm_features.dissimilarity_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.dissimilarity_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.dissimilarity_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.dissimilarity_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.dissimilarity_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Keseragaman</strong></td>
+                                        <td>{{ glcm_features.homogeneity_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.homogeneity_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.homogeneity_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.homogeneity_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.homogeneity_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Energi</strong></td>
+                                        <td>{{ glcm_features.energy_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.energy_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.energy_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.energy_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.energy_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Korelasi</strong></td>
+                                        <td>{{ glcm_features.correlation_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.correlation_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.correlation_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.correlation_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.correlation_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>ASM</strong></td>
+                                        <td>{{ glcm_features.asm_0|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.asm_45|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.asm_90|floatformat:4 }}</td>
+                                        <td>{{ glcm_features.asm_135|floatformat:4 }}</td>
+                                        <td><strong>{{ glcm_features.asm_mean|floatformat:4 }}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-clock"></i> Waktu ekstraksi fitur: {{ glcm_features.extraction_time|floatformat:3 }} detik
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Penilaian -->
+            <div class="card fade-in-up" style="animation-delay:0.6s;">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-chat-left-text-fill" style="color:#666;"></i> Berikan Penilaian
+                    </h5>
+                    <p class="text-muted small">Apakah hasil deteksi ini sudah tepat? Penilaian Anda membantu kami memperbaiki sistem.</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ feedback_form.is_correct.label_tag }}
+                            {{ feedback_form.is_correct }}
+                        </div>
+                        <div class="mb-3">
+                            {{ feedback_form.actual_disease.label_tag }}
+                            {{ feedback_form.actual_disease }}
+                        </div>
+                        <div class="mb-3">
+                            {{ feedback_form.notes.label_tag }}
+                            {{ feedback_form.notes }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Kirim Penilaian
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tombol Aksi -->
+    <div class="text-center mt-4 fade-in-up" style="animation-delay:0.7s;">
+        <a href="{% url 'appsRLD:upload' %}" class="btn btn-primary btn-lg me-2">
+            <i class="bi bi-upload"></i> Deteksi Foto Lain
+        </a>
+        <a href="{% url 'appsRLD:history' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-clock-history"></i> Lihat Riwayat
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #confidenceChart { max-height: 300px !important; height: 300px !important; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var chartElement = document.getElementById('confidenceChart');
+    if (!chartElement) return;
+    if (window.confidenceChartInstance) window.confidenceChartInstance.destroy();
+
+    var confidenceData = {{ confidence_data|safe }};
+    if (!confidenceData || Object.keys(confidenceData).length === 0) return;
+
+    var ctx = chartElement.getContext('2d');
+    var labels = Object.keys(confidenceData);
+    var data   = Object.values(confidenceData);
+
+    /* Monochrome: nilai tinggi = gelap, rendah = terang */
+    var colors = data.map(function(v) {
+        if (v >= 80) return 'rgba(50,50,50,0.85)';
+        else if (v >= 60) return 'rgba(120,120,120,0.85)';
+        else return 'rgba(190,190,190,0.85)';
+    });
+
+    window.confidenceChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Keyakinan (%)',
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c.replace('0.85','1')),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(c) { return c.parsed.x.toFixed(2) + '%'; } } }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true, max: 100,
+                    ticks: { callback: function(v) { return v + '%'; } }
+                }
+            },
+            animation: { duration: 800 }
+        }
+    });
+})();
+</script>
+{% endblock %}

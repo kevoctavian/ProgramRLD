@@ -1,0 +1,75 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+
+{% block title %}Register - Rice Disease Classifier{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow fade-in-up">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill" style="font-size:4rem;color:#444;"></i>
+                        <h3 class="mt-2 fw-bold">Buat Akun Baru</h3>
+                        <p class="text-muted">Daftarkan diri Anda untuk mulai menggunakan sistem</p>
+                    </div>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">{{ form.first_name.label }}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="small mt-1" style="color:#555;">{{ form.first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">{{ form.last_name.label }}</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="small mt-1" style="color:#555;">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="small mt-1" style="color:#555;">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.password1.label }}</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="small mt-1" style="color:#555;">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.password2.label }}</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="small mt-1" style="color:#555;">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-check-fill"></i> Daftar Sekarang
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    <p class="text-center mb-0">
+                        Sudah punya akun?
+                        <a href="{% url 'appsRLD:login' %}" style="color:#333;font-weight:600;">Login di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

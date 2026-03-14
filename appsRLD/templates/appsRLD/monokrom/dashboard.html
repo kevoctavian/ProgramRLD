@@ -1,0 +1,269 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-stat-card {
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .admin-stat-card h3 { font-size: 2.5rem; font-weight: 800; margin: 0; }
+    .admin-stat-card p  { margin: 0.3rem 0 0; opacity: 0.9; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 px-4">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-speedometer2" style="font-size:2.5rem; color:#555;"></i>
+        <div>
+            <h2 class="fw-bold mb-0">Admin Dashboard</h2>
+            <small class="text-muted">Ringkasan seluruh aktivitas sistem</small>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:#2c2c2c;">
+                <i class="bi bi-people-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>128</h3>
+                <p>Total User</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:#444444;">
+                <i class="bi bi-person-check-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>115</h3>
+                <p>User Aktif</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:#666666;">
+                <i class="bi bi-clipboard2-pulse-fill" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>542</h3>
+                <p>Total Diagnosis</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-stat-card" style="background:#888888;">
+                <i class="bi bi-images" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>542</h3>
+                <p>Total Foto</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disease Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center" style="border:2px solid #333;">
+                <div class="fw-bold fs-4" style="color:#222;">134</div>
+                <small class="text-muted">Bacterial Blight</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center" style="border:2px solid #555;">
+                <div class="fw-bold fs-4" style="color:#444;">198</div>
+                <small class="text-muted">Rice Blast</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center" style="border:2px solid #777;">
+                <div class="fw-bold fs-4" style="color:#666;">112</div>
+                <small class="text-muted">Tungro</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 text-center" style="border:2px solid #999;">
+                <div class="fw-bold fs-4" style="color:#888;">98</div>
+                <small class="text-muted">Healthy</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafik -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-graph-up" style="color:#444;"></i> Diagnosis per Bulan
+                </h5>
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-pie-chart-fill" style="color:#555;"></i> Sebaran Penyakit
+                </h5>
+                <canvas id="diseaseChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Bawah -->
+    <div class="row g-4">
+        <!-- User Terbaru -->
+        <div class="col-lg-5">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-person-plus-fill" style="color:#444;"></i> User Terbaru
+                    </h5>
+                    <a href="#" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Username</th>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>Daftar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="fw-semibold" style="color:#222;">budi123</span></td>
+                                <td>Budi Santoso</td>
+                                <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                                <td><small class="text-muted">10 Mar 2026</small></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-semibold" style="color:#222;">siti_r</span></td>
+                                <td>Siti Rahayu</td>
+                                <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                                <td><small class="text-muted">09 Mar 2026</small></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-semibold" style="color:#222;">agus_p</span></td>
+                                <td>Agus Purnomo</td>
+                                <td><span class="badge" style="background:#999;color:#fff;">Nonaktif</span></td>
+                                <td><small class="text-muted">07 Mar 2026</small></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-semibold" style="color:#222;">dewi99</span></td>
+                                <td>Dewi Lestari</td>
+                                <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                                <td><small class="text-muted">05 Mar 2026</small></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-semibold" style="color:#222;">reza_m</span></td>
+                                <td>Reza Mahendra</td>
+                                <td><span class="badge" style="background:#444;color:#fff;">Aktif</span></td>
+                                <td><small class="text-muted">03 Mar 2026</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnosis Terbaru -->
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-clipboard2-pulse-fill" style="color:#555;"></i> Diagnosis Terbaru
+                    </h5>
+                    <a href="#" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Penyakit</th>
+                                <th>Confidence</th>
+                                <th>Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><small class="fw-semibold">budi123</small></td>
+                                <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                                <td><span class="fw-bold" style="color:#222;">92.4%</span></td>
+                                <td><small class="text-muted">12 Mar, 08:14</small></td>
+                            </tr>
+                            <tr>
+                                <td><small class="fw-semibold">siti_r</small></td>
+                                <td><span class="badge" style="background:#555;color:#fff;">Healthy</span></td>
+                                <td><span class="fw-bold" style="color:#444;">87.1%</span></td>
+                                <td><small class="text-muted">11 Mar, 21:30</small></td>
+                            </tr>
+                            <tr>
+                                <td><small class="fw-semibold">dewi99</small></td>
+                                <td><span class="badge" style="background:#555;color:#fff;">Tungro</span></td>
+                                <td><span class="fw-bold" style="color:#666;">74.8%</span></td>
+                                <td><small class="text-muted">11 Mar, 15:22</small></td>
+                            </tr>
+                            <tr>
+                                <td><small class="fw-semibold">reza_m</small></td>
+                                <td><span class="badge" style="background:#777;color:#fff;">Bacterial Blight</span></td>
+                                <td><span class="fw-bold" style="color:#888;">55.3%</span></td>
+                                <td><small class="text-muted">10 Mar, 10:05</small></td>
+                            </tr>
+                            <tr>
+                                <td><small class="fw-semibold">agus_p</small></td>
+                                <td><span class="badge" style="background:#333;color:#fff;">Rice Blast</span></td>
+                                <td><span class="fw-bold" style="color:#222;">95.0%</span></td>
+                                <td><small class="text-muted">09 Mar, 09:47</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    /* Line Chart: Diagnosis per Bulan — data dummy */
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: ['Okt 2025','Nov 2025','Des 2025','Jan 2026','Feb 2026','Mar 2026'],
+            datasets: [{
+                label: 'Diagnosis',
+                data: [42, 58, 75, 91, 110, 166],
+                borderColor: '#333333',
+                backgroundColor: 'rgba(80,80,80,0.1)',
+                fill: true, tension: 0.4, borderWidth: 2,
+                pointBackgroundColor: '#333'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+
+    /* Doughnut Chart: Sebaran Penyakit — data dummy */
+    new Chart(document.getElementById('diseaseChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Bacterial Blight','Rice Blast','Tungro','Healthy'],
+            datasets: [{
+                data: [134, 198, 112, 98],
+                backgroundColor: ['#2c2c2c','#555555','#888888','#bbbbbb'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+});
+</script>
+{% endblock %}

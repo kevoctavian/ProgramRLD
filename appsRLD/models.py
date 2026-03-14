@@ -417,6 +417,17 @@ class ModelTrainingHistory(models.Model):
     f1_score = models.FloatField(
         verbose_name="F1-Score (%)"
     )
+    val_accuracy = models.FloatField(
+        verbose_name="Akurasi Validasi (%)",
+        blank=True,
+        null=True
+    )
+    per_class_metrics = models.JSONField(
+        verbose_name="Metrik per Kelas",
+        blank=True,
+        null=True,
+        help_text="JSON: {class_name: {precision, recall, f1, support}}"
+    )
     
     # Random Forest Parameters
     n_estimators = models.IntegerField(
@@ -479,6 +490,28 @@ class ModelTrainingHistory(models.Model):
         if self.is_active:
             ModelTrainingHistory.objects.filter(is_active=True).update(is_active=False)
         super().save(*args, **kwargs)
+    
+    def get_per_class_list(self):
+        """Return per_class_metrics sebagai list siap pakai di template"""
+        if not self.per_class_metrics:
+            return []
+        color_map = {
+            'Bacterial Blight': 'danger',
+            'Rice Blast':       'warning',
+            'Tungro':           'info',
+            'Healthy':          'success',
+        }
+        return [
+            {
+                'name':      class_name,
+                'precision': metrics['precision'],
+                'recall':    metrics['recall'],
+                'f1':        metrics['f1'],
+                'support':   metrics['support'],
+                'color':     color_map.get(class_name, 'secondary'),
+            }
+            for class_name, metrics in self.per_class_metrics.items()
+        ]
 
 
 # ========== MODEL 6: SYSTEM STATISTICS ==========

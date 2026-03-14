@@ -1,0 +1,185 @@
+{% extends 'appsRLD/monokrom/base.html' %}
+
+{% block title %}Statistik - Cek Penyakit Padi{% endblock %}
+
+{% block extra_css %}
+<style>
+    #chart1, #chart2 { max-height: 300px !important; height: 300px !important; }
+    .card canvas { display: block; box-sizing: border-box; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-5">
+        <i class="bi bi-bar-chart-fill" style="color:#444;"></i> Dasbor Statistik
+    </h1>
+
+    <!-- Kartu Ringkasan -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="bi bi-images"></i>
+                <h3>{{ total_images|default:0 }}</h3>
+                <p>Total Foto Diunggah</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="bi bi-check-circle"></i>
+                <h3>{{ total_diagnoses|default:0 }}</h3>
+                <p>Total Hasil Deteksi</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="bi bi-speedometer"></i>
+                <h3>{{ avg_confidence|floatformat:1 }}%</h3>
+                <p>Rata-rata Keyakinan</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="bi bi-clock"></i>
+                <h3>{{ avg_processing_time|floatformat:2 }}s</h3>
+                <p>Rata-rata Waktu Proses</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafik -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Laporan Penyakit yang Terdeteksi</h5>
+                    <canvas id="chart1"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Tingkat Keyakinan Hasil Deteksi</h5>
+                    <canvas id="chart2"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Penyakit Terbanyak Bulan Ini -->
+    {% if top_diseases_month %}
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Penyakit Terbanyak Bulan Ini</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Peringkat</th>
+                                    <th>Nama Penyakit</th>
+                                    <th>Jumlah Kasus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for disease in top_diseases_month %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ disease.predicted_disease__display_name }}</td>
+                                    <td>
+                                        <span class="badge" style="background:#555;color:#fff;">
+                                            {{ disease.count }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Penilaian Pengguna -->
+    {% if total_feedback > 0 %}
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Penilaian dari Pengguna</h5>
+                    <p>Berdasarkan {{ total_feedback }} penilaian dari pengguna:</p>
+                    <div class="progress" style="height:30px;">
+                        <div class="progress-bar" role="progressbar"
+                             style="width:{{ accuracy_rate }}%;">
+                            {{ accuracy_rate|floatformat:1 }}% Hasil Akurat
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    /* ---- Pie Chart: Sebaran Penyakit (monochrome) ---- */
+    var dd = {{ disease_distribution|safe }};
+    var el1 = document.getElementById('chart1');
+    if (el1 && dd && dd.length) {
+        if (window.chart1Instance) window.chart1Instance.destroy();
+        window.chart1Instance = new Chart(el1.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: dd.map(i => i.predicted_disease__display_name),
+                datasets: [{
+                    data: dd.map(i => i.count),
+                    backgroundColor: ['#2c2c2c','#555555','#888888','#aaaaaa','#cccccc'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                animation: { duration: 1000 }
+            }
+        });
+    }
+
+    /* ---- Bar Chart: Tingkat Keyakinan (monochrome) ---- */
+    var cr = {{ confidence_ranges|safe }};
+    var el2 = document.getElementById('chart2');
+    if (el2 && cr) {
+        if (window.chart2Instance) window.chart2Instance.destroy();
+        window.chart2Instance = new Chart(el2.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(cr),
+                datasets: [{
+                    label: 'Jumlah Hasil Deteksi',
+                    data: Object.values(cr),
+                    backgroundColor: '#555555',
+                    borderColor: '#333333',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                animation: { duration: 1000 }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}
