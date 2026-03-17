@@ -1,5 +1,8 @@
 from django.urls import path
+
+from ProgramRLD import settings
 from . import views
+from django.conf.urls.static import static
 
 app_name = 'appsRLD'
 
@@ -47,4 +50,4 @@ urlpatterns = [
     path('admin-panel/users/<int:user_id>/toggle/', views.AdminToggleUserView.as_view(), name='admin_toggle_user'),
     path('admin-panel/diagnoses/', views.AdminDiagnosisListView.as_view(), name='admin_diagnosis_list'),
     path('admin-panel/diagnoses/delete/<int:diagnosis_id>/', views.AdminDeleteDiagnosisView.as_view(), name='admin_delete_diagnosis'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

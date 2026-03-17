@@ -86,17 +86,24 @@
     </div>
 
     <div class="row g-4 mb-4">
-        <!-- Grafik Bulanan -->
+        <!-- Grafik Harian -->
         <div class="col-lg-8">
             <div class="card p-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-graph-up text-success"></i> Diagnosis per Bulan</h5>
-                <canvas id="monthlyChart" height="100"></canvas>
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-graph-up text-success"></i> Diagnosis per Hari
+                    </h5>
+                    <span class="badge bg-light text-muted border">30 Hari Terakhir</span>
+                </div>
+                <canvas id="dailyChart" height="100"></canvas>
             </div>
         </div>
         <!-- Grafik Penyakit -->
         <div class="col-lg-4">
             <div class="card p-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-info"></i> Sebaran Penyakit</h5>
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-pie-chart-fill text-info"></i> Sebaran Penyakit
+                </h5>
                 <canvas id="diseaseChart" height="200"></canvas>
             </div>
         </div>
@@ -107,8 +114,12 @@
         <div class="col-lg-5">
             <div class="card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-person-plus-fill text-primary"></i> User Terbaru</h5>
-                    <a href="{% url 'appsRLD:admin_user_list' %}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-person-plus-fill text-primary"></i> User Terbaru
+                    </h5>
+                    <a href="{% url 'appsRLD:admin_user_list' %}" class="btn btn-sm btn-outline-primary">
+                        Lihat Semua
+                    </a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -124,7 +135,8 @@
                             {% for u in recent_users %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'appsRLD:admin_user_detail' u.id %}" class="fw-semibold text-decoration-none">
+                                    <a href="{% url 'appsRLD:admin_user_detail' u.id %}"
+                                       class="fw-semibold text-decoration-none">
                                         {{ u.username }}
                                     </a>
                                 </td>
@@ -139,7 +151,9 @@
                                 <td><small class="text-muted">{{ u.date_joined|date:"d M Y" }}</small></td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">Belum ada user</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Belum ada user</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -151,8 +165,12 @@
         <div class="col-lg-7">
             <div class="card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-clipboard2-pulse-fill text-danger"></i> Diagnosis Terbaru</h5>
-                    <a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="btn btn-sm btn-outline-danger">Lihat Semua</a>
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-clipboard2-pulse-fill text-danger"></i> Diagnosis Terbaru
+                    </h5>
+                    <a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="btn btn-sm btn-outline-danger">
+                        Lihat Semua
+                    </a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -167,21 +185,30 @@
                         <tbody>
                             {% for d in recent_diagnoses %}
                             <tr>
-                                <td><small class="fw-semibold">{{ d.image.user.username|default:"?" }}</small></td>
+                                <td>
+                                    <small class="fw-semibold">{{ d.image.user.username|default:"?" }}</small>
+                                </td>
                                 <td>
                                     <span class="badge bg-secondary">
                                         {{ d.predicted_disease.display_name|default:"?" }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="fw-bold {% if d.max_confidence >= 80 %}text-success{% elif d.max_confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                    <span class="fw-bold
+                                        {% if d.max_confidence >= 80 %}text-success
+                                        {% elif d.max_confidence >= 60 %}text-warning
+                                        {% else %}text-danger{% endif %}">
                                         {{ d.max_confidence|floatformat:1 }}%
                                     </span>
                                 </td>
-                                <td><small class="text-muted">{{ d.diagnosed_at|date:"d M, H:i" }}</small></td>
+                                <td>
+                                    <small class="text-muted">{{ d.diagnosed_at|date:"d M, H:i" }}</small>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">Belum ada diagnosis</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Belum ada diagnosis</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -196,37 +223,85 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Monthly Chart
-    var monthly = {{ monthly_diagnoses|safe }};
-    if (monthly.length) {
-        new Chart(document.getElementById('monthlyChart'), {
+
+    // ===== Grafik Diagnosis Per Hari =====
+    var daily = {{ daily_diagnoses|safe }};
+
+    if (daily.length) {
+        new Chart(document.getElementById('dailyChart'), {
             type: 'line',
             data: {
-                labels: monthly.map(i => i.month),
+                labels: daily.map(i => i.day),
                 datasets: [{
-                    label: 'Diagnosis',
-                    data: monthly.map(i => i.count),
+                    label: 'Jumlah Diagnosis',
+                    data: daily.map(i => i.count),
+                    backgroundColor: 'rgba(46, 204, 113, 0.15)',
                     borderColor: '#2ecc71',
-                    backgroundColor: 'rgba(46,204,113,0.1)',
-                    fill: true, tension: 0.4, borderWidth: 2
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#2ecc71',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(items) { return items[0].label; },
+                            label: function(item) { return ' ' + item.raw + ' diagnosis'; }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, font: { size: 11 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, font: { size: 11 } },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
         });
+    } else {
+        document.getElementById('dailyChart').closest('.card').innerHTML +=
+            '<p class="text-center text-muted mt-3"><i class="bi bi-bar-chart-line"></i> Belum ada data diagnosis dalam 30 hari terakhir.</p>';
     }
 
-    // Disease Chart
+    // ===== Grafik Sebaran Penyakit =====
     var dd = {{ disease_dist|safe }};
+
     if (dd.length) {
         new Chart(document.getElementById('diseaseChart'), {
             type: 'doughnut',
             data: {
                 labels: dd.map(i => i.predicted_disease__display_name),
-                datasets: [{ data: dd.map(i => i.count), backgroundColor: ['#e74c3c','#f39c12','#3498db','#2ecc71'], borderWidth: 2 }]
+                datasets: [{
+                    data: dd.map(i => i.count),
+                    backgroundColor: ['#e74c3c', '#f39c12', '#3498db', '#2ecc71'],
+                    borderWidth: 2
+                }]
             },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
+                }
+            }
         });
+    } else {
+        document.getElementById('diseaseChart').closest('.card').innerHTML +=
+            '<p class="text-center text-muted mt-3"><i class="bi bi-pie-chart"></i> Belum ada data penyakit.</p>';
     }
+
 });
 </script>
 {% endblock %}

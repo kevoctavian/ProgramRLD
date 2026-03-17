@@ -15,7 +15,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
-from django.db.models import Count, Avg, Q, Max
+from django.db.models import Case, Count, Avg, Q, IntegerField, Max, When
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.conf import settings
@@ -34,7 +34,7 @@ from .models import (
 from .forms import ImageUploadForm, FeedbackForm, SearchForm, RegisterForm, LoginForm
 from .ml_pipeline import RiceDiseasePipeline
 from datetime import timedelta
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncDate, TruncMonth
 from PIL import Image
 import os
 import json
@@ -604,19 +604,25 @@ class DiseaseListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
 
+        ordering = Case(
+            When(name='healthy', then=1),
+            default=0,
+            output_field=IntegerField()
+        )
+
         if user.is_staff:
-            # Admin lihat semua kasus
             return DiseaseCategory.objects.annotate(
-                diagnosis_count=Count('diagnoses')
-            ).order_by('name')
+                diagnosis_count=Count('diagnoses'),
+                order=ordering
+            ).order_by('order', 'name')
         else:
-            # User hanya lihat kasus miliknya
             return DiseaseCategory.objects.annotate(
                 diagnosis_count=Count(
                     'diagnoses',
                     filter=Q(diagnoses__image__user=user)
-                )
-            ).order_by('name')
+                ),
+                order=ordering
+            ).order_by('order', 'name')
 
 
 class DiseaseDetailView(LoginRequiredMixin, DetailView):
@@ -1160,56 +1166,47 @@ class AdminRequiredMixin(LoginRequiredMixin):
 # ========== ADMIN DASHBOARD ==========
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
     template_name = 'appsRLD/admin/dashboard.html'
-
+ 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+ 
         from django.contrib.auth.models import User
-        from django.db.models import Avg
-
-        # Statistik global
-        total_users     = User.objects.filter(is_staff=False).count()
-        active_users    = User.objects.filter(is_staff=False, is_active=True).count()
-        inactive_users  = User.objects.filter(is_staff=False, is_active=False).count()
+ 
+        total_users    = User.objects.filter(is_staff=False).count()
+        active_users   = User.objects.filter(is_staff=False, is_active=True).count()
+        inactive_users = User.objects.filter(is_staff=False, is_active=False).count()
         total_diagnoses = DiagnosisResult.objects.count()
         total_images    = RiceLeafImage.objects.count()
-        avg_confidence  = DiagnosisResult.objects.aggregate(
-            avg=Avg('max_confidence')
-        )['avg'] or 0
-
-        # Diagnosis per penyakit
+        avg_confidence  = DiagnosisResult.objects.aggregate(avg=Avg('max_confidence'))['avg'] or 0
+ 
         disease_dist = DiagnosisResult.objects.filter(
             predicted_disease__isnull=False
         ).values('predicted_disease__display_name').annotate(
             count=Count('id')
         ).order_by('-count')
-
-        # User terbaru
-        recent_users = User.objects.filter(
-            is_staff=False
-        ).order_by('-date_joined')[:5]
-
-        # Diagnosis terbaru
+ 
+        recent_users = User.objects.filter(is_staff=False).order_by('-date_joined')[:5]
+ 
         recent_diagnoses = DiagnosisResult.objects.select_related(
             'image', 'image__user', 'predicted_disease'
         ).order_by('-diagnosed_at')[:10]
-
-        # Diagnosis per bulan (6 bulan terakhir)
-        six_months_ago = timezone.now() - timedelta(days=180)
-        monthly_data = DiagnosisResult.objects.filter(
-            diagnosed_at__gte=six_months_ago
+ 
+        # === PERHARI: 30 hari terakhir ===
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        daily_data = DiagnosisResult.objects.filter(
+            diagnosed_at__gte=thirty_days_ago
         ).annotate(
-            month=TruncMonth('diagnosed_at')
-        ).values('month').annotate(count=Count('id')).order_by('month')
-
-        monthly_diagnoses = [
+            day=TruncDate('diagnosed_at')
+        ).values('day').annotate(count=Count('id')).order_by('day')
+ 
+        daily_diagnoses = [
             {
-                'month': item['month'].strftime('%Y-%m') if item['month'] else '',
+                'day': item['day'].strftime('%d %b') if item['day'] else '',
                 'count': item['count']
             }
-            for item in monthly_data
+            for item in daily_data
         ]
-
+ 
         context.update({
             'total_users':      total_users,
             'active_users':     active_users,
@@ -1220,7 +1217,7 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             'disease_dist':     json.dumps(list(disease_dist)),
             'recent_users':     recent_users,
             'recent_diagnoses': recent_diagnoses,
-            'monthly_diagnoses': json.dumps(monthly_diagnoses),
+            'daily_diagnoses':  json.dumps(daily_diagnoses),
             'total_bacterial_blight': DiagnosisResult.objects.filter(predicted_disease__name='bacterial_blight').count(),
             'total_rice_blast':       DiagnosisResult.objects.filter(predicted_disease__name='rice_blast').count(),
             'total_tungro':           DiagnosisResult.objects.filter(predicted_disease__name='tungro').count(),
