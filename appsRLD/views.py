@@ -22,7 +22,6 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
 import base64
-from flask import request
 import joblib
 from .models import (
     RiceLeafImage,

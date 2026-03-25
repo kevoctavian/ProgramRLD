@@ -358,66 +358,83 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
     # --- Random Forest Grid Search ---
     print("\n🔧 Grid Search Random Forest...")
     rf_param_grid = {
-        'n_estimators': [500, 700, 1000],
-        'max_depth': [None, 30, 40],
-        'min_samples_split': [2, 3],
-        'min_samples_leaf': [1],
+        # Jumlah pohon — ditambah opsi 300 (cepat) dan 1200 (dalam)
+        'n_estimators': [300, 500, 1000],
+
+        # Kedalaman pohon — tambah None (unlimited) dan 50 untuk eksplorasi lebih dalam
+        'max_depth': [None, 20, 30, 50],
+
+        # Min sampel untuk split — tambah 4 untuk mengurangi overfitting
+        'min_samples_split': [2, 4],
+
+        # Min sampel di leaf — tambah 2 agar model lebih general
+        'min_samples_leaf': [1, 2],
+
+        # Fitur per split — sqrt dan log2 tetap, keduanya terbukti baik
         'max_features': ['sqrt', 'log2'],
+
+        # Class weight — tetap balanced karena data tidak seimbang
         'class_weight': ['balanced']
     }
+    # Total: 3 × 4 × 2 × 2 × 2 × 1 = 96 kombinasi × 5 fold = 480 fits
+    # ~2.7x lebih banyak dari sebelumnya (36 kombinasi), durasi estimasi ~3500s
 
     rf_grid = GridSearchCV(
         RandomForestClassifier(random_state=random_state, n_jobs=-1),
-        rf_param_grid, cv=cv, scoring='accuracy', n_jobs=-1, verbose=1
+        rf_param_grid, cv=cv, scoring='f1_weighted', n_jobs=-1, verbose=1
     )
+    # scoring diubah ke f1_weighted agar lebih sensitif terhadap kelas minoritas (rice blast)
     rf_grid.fit(X_train_resampled, y_train_resampled)
     best_rf = rf_grid.best_estimator_
     print(f"  ✓ Best RF: {rf_grid.best_params_}")
     print(f"  ✓ Best CV Score: {rf_grid.best_score_*100:.2f}%")
 
     # --- Extra Trees ---
-    print("\n🔧 Training Extra Trees...")
-    et = ExtraTreesClassifier(
-        n_estimators=800,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features='sqrt',
-        class_weight='balanced',
-        random_state=random_state,
-        n_jobs=-1
-    )
-    et.fit(X_train_resampled, y_train_resampled)
-    et_val_acc = accuracy_score(y_val, et.predict(X_val_scaled))
-    print(f"  ✓ Extra Trees Val Acc: {et_val_acc*100:.2f}%")
+    # print("\n🔧 Training Extra Trees...")
+    # et = ExtraTreesClassifier(
+    #     n_estimators=800,
+    #     max_depth=None,
+    #     min_samples_split=2,
+    #     min_samples_leaf=1,
+    #     max_features='sqrt',
+    #     class_weight='balanced',
+    #     random_state=random_state,
+    #     n_jobs=-1
+    # )
+    # et.fit(X_train_resampled, y_train_resampled)
+    # et_val_acc = accuracy_score(y_val, et.predict(X_val_scaled))
+    # print(f"  ✓ Extra Trees Val Acc: {et_val_acc*100:.2f}%")
 
-    # --- Gradient Boosting ---
-    print("\n🔧 Training Gradient Boosting...")
-    gb = GradientBoostingClassifier(
-        n_estimators=400,
-        learning_rate=0.05,
-        max_depth=6,
-        subsample=0.8,
-        min_samples_split=3,
-        random_state=random_state
-    )
-    gb.fit(X_train_resampled, y_train_resampled)
-    gb_val_acc = accuracy_score(y_val, gb.predict(X_val_scaled))
-    print(f"  ✓ Gradient Boosting Val Acc: {gb_val_acc*100:.2f}%")
+    # # --- Gradient Boosting ---
+    # print("\n🔧 Training Gradient Boosting...")
+    # gb = GradientBoostingClassifier(
+    #     n_estimators=400,
+    #     learning_rate=0.05,
+    #     max_depth=6,
+    #     subsample=0.8,
+    #     min_samples_split=3,
+    #     random_state=random_state
+    # )
+    # gb.fit(X_train_resampled, y_train_resampled)
+    # gb_val_acc = accuracy_score(y_val, gb.predict(X_val_scaled))
+    # print(f"  ✓ Gradient Boosting Val Acc: {gb_val_acc*100:.2f}%")
 
-    # --- Voting Ensemble ---
-    print("\n🔧 Building Voting Ensemble...")
-    model = VotingClassifier(
-        estimators=[
-            ('rf', best_rf),
-            ('et', et),
-            ('gb', gb)
-        ],
-        voting='soft',
-        n_jobs=-1
-    )
-    model.fit(X_train_resampled, y_train_resampled)
+    # # --- Voting Ensemble ---
+    # print("\n🔧 Building Voting Ensemble...")
+    # model = VotingClassifier(
+    #     estimators=[
+    #         ('rf', best_rf),
+    #         ('et', et),
+    #         ('gb', gb)
+    #     ],
+    #     voting='soft',
+    #     n_jobs=-1
+    # )
+    # model.fit(X_train_resampled, y_train_resampled)
 
+    print("\n🔧 Menggunakan Random Forest sebagai model final...")
+    model = best_rf
+    print(f"  ✓ Model: Random Forest (best from GridSearch)")
     training_duration = time.time() - training_start
     print(f"\n✓ Training selesai dalam {training_duration:.2f}s")
 

@@ -278,7 +278,7 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
                 smote_type='borderline', random_state=42):
 
     print("=" * 80)
-    print("RICE DISEASE CLASSIFICATION - TARGET 90%+")
+    print("RICE DISEASE CLASSIFICATION")
     print("=" * 80)
 
     os.makedirs(output_dir, exist_ok=True)
@@ -308,14 +308,14 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
 
     # ========== STEP 2: SPLIT ==========
     print("\n" + "=" * 80)
-    print("STEP 2: SPLITTING DATASET (80/10/10)")
+    print("STEP 2: SPLITTING DATASET (70/15/15)")
     print("=" * 80)
 
     X_temp, X_test, y_temp, y_test = train_test_split(
-        X, y, test_size=0.10, random_state=random_state, stratify=y
+        X, y, test_size=0.15, random_state=random_state, stratify=y
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_temp, y_temp, test_size=0.1111, random_state=random_state, stratify=y_temp
+        X_temp, y_temp, test_size=0.176, random_state=random_state, stratify=y_temp
     )
 
     print(f"  Train: {len(X_train)} | Val: {len(X_val)} | Test: {len(X_test)}")
@@ -375,48 +375,53 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
     print(f"  ✓ Best RF: {rf_grid.best_params_}")
     print(f"  ✓ Best CV Score: {rf_grid.best_score_*100:.2f}%")
 
-    # --- Extra Trees ---
-    print("\n🔧 Training Extra Trees...")
-    et = ExtraTreesClassifier(
-        n_estimators=800,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features='sqrt',
-        class_weight='balanced',
-        random_state=random_state,
-        n_jobs=-1
-    )
-    et.fit(X_train_resampled, y_train_resampled)
-    et_val_acc = accuracy_score(y_val, et.predict(X_val_scaled))
-    print(f"  ✓ Extra Trees Val Acc: {et_val_acc*100:.2f}%")
+    # --- Extra Trees --- (DINONAKTIFKAN - hanya RF)
+    # print("\n🔧 Training Extra Trees...")
+    # et = ExtraTreesClassifier(
+    #     n_estimators=800,
+    #     max_depth=None,
+    #     min_samples_split=2,
+    #     min_samples_leaf=1,
+    #     max_features='sqrt',
+    #     class_weight='balanced',
+    #     random_state=random_state,
+    #     n_jobs=-1
+    # )
+    # et.fit(X_train_resampled, y_train_resampled)
+    # et_val_acc = accuracy_score(y_val, et.predict(X_val_scaled))
+    # print(f"  ✓ Extra Trees Val Acc: {et_val_acc*100:.2f}%")
 
-    # --- Gradient Boosting ---
-    print("\n🔧 Training Gradient Boosting...")
-    gb = GradientBoostingClassifier(
-        n_estimators=400,
-        learning_rate=0.05,
-        max_depth=6,
-        subsample=0.8,
-        min_samples_split=3,
-        random_state=random_state
-    )
-    gb.fit(X_train_resampled, y_train_resampled)
-    gb_val_acc = accuracy_score(y_val, gb.predict(X_val_scaled))
-    print(f"  ✓ Gradient Boosting Val Acc: {gb_val_acc*100:.2f}%")
+    # --- Gradient Boosting --- (DINONAKTIFKAN - hanya RF)
+    # print("\n🔧 Training Gradient Boosting...")
+    # gb = GradientBoostingClassifier(
+    #     n_estimators=400,
+    #     learning_rate=0.05,
+    #     max_depth=6,
+    #     subsample=0.8,
+    #     min_samples_split=3,
+    #     random_state=random_state
+    # )
+    # gb.fit(X_train_resampled, y_train_resampled)
+    # gb_val_acc = accuracy_score(y_val, gb.predict(X_val_scaled))
+    # print(f"  ✓ Gradient Boosting Val Acc: {gb_val_acc*100:.2f}%")
 
-    # --- Voting Ensemble ---
-    print("\n🔧 Building Voting Ensemble...")
-    model = VotingClassifier(
-        estimators=[
-            ('rf', best_rf),
-            ('et', et),
-            ('gb', gb)
-        ],
-        voting='soft',
-        n_jobs=-1
-    )
-    model.fit(X_train_resampled, y_train_resampled)
+    # --- Voting Ensemble --- (DINONAKTIFKAN - hanya RF)
+    # print("\n🔧 Building Voting Ensemble...")
+    # model = VotingClassifier(
+    #     estimators=[
+    #         ('rf', best_rf),
+    #         ('et', et),
+    #         ('gb', gb)
+    #     ],
+    #     voting='soft',
+    #     n_jobs=-1
+    # )
+    # model.fit(X_train_resampled, y_train_resampled)
+
+    # Gunakan Random Forest saja sebagai model final
+    print("\n🔧 Menggunakan Random Forest sebagai model final...")
+    model = best_rf
+    print(f"  ✓ Model: Random Forest (best from GridSearch)")
 
     training_duration = time.time() - training_start
     print(f"\n✓ Training selesai dalam {training_duration:.2f}s")
@@ -518,7 +523,7 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
 
         ModelTrainingHistory.objects.filter(is_active=True).update(is_active=False)
         ModelTrainingHistory.objects.create(
-            model_name='Ensemble RF+ET+GB + Augmentasi',
+            model_name='Random Forest + Augmentasi',
             version=f'v{datetime.now().strftime("%Y%m%d_%H%M%S")}',
             dataset_name='RLD_Dataset_Clean (4 Classes + Augmentasi)',
             total_samples=len(X),
