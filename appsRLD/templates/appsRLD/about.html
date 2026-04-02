@@ -100,6 +100,66 @@
 
 <div class="container pb-5">
 
+    <!-- ===== DATASET ===== -->
+    <div class="mb-5">
+        <h2 class="section-title">
+            <i class="bi bi-database-fill text-success"></i> Dataset
+        </h2>
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div class="card h-100 p-4">
+                    <h5 class="fw-bold mb-3">Informasi Dataset</h5>
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted">Nama</td>
+                            <td class="fw-semibold">{{ dataset_info.name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Sumber</td>
+                            <td class="fw-semibold">{{ dataset_info.source }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Total Sampel</td>
+                            <td><span class="badge bg-success fs-6">{{ dataset_info.total_samples }}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Setelah Augmentasi</td>
+                            <td><span class="badge bg-primary fs-6">{{ dataset_info.augmented_samples }}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Jumlah Kelas</td>
+                            <td><span class="badge bg-info fs-6">{{ dataset_info.classes }} Kelas</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="card h-100 p-4">
+                    <h5 class="fw-bold mb-3">Distribusi Kelas</h5>
+                    <div class="d-flex flex-column gap-2">
+                        {% for cls in dataset_info.class_list %}
+                        <div class="class-badge">
+                            <div class="step-icon bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }}">
+                                <i class="bi {{ cls.icon }}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ cls.name }}</div>
+                                <div class="progress mt-1" style="height:6px;">
+                                    <div class="progress-bar bg-{{ cls.color }}"
+                                         style="width: {% widthratio cls.count|add:0 928 100 %}%"></div>
+                                </div>
+                            </div>
+                            <span class="badge bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }} fw-bold fs-6">
+                                {{ cls.count }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== PERFORMA MODEL ===== -->
     <div class="mb-5">
         <h2 class="section-title">
@@ -337,66 +397,6 @@
                         <p class="mt-2">Belum tersedia. Jalankan pelatihan model terlebih dahulu.</p>
                     </div>
                     {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== DATASET ===== -->
-    <div class="mb-5">
-        <h2 class="section-title">
-            <i class="bi bi-database-fill text-success"></i> Dataset
-        </h2>
-        <div class="row g-4">
-            <div class="col-md-5">
-                <div class="card h-100 p-4">
-                    <h5 class="fw-bold mb-3">Informasi Dataset</h5>
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <td class="text-muted">Nama</td>
-                            <td class="fw-semibold">{{ dataset_info.name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Sumber</td>
-                            <td class="fw-semibold">{{ dataset_info.source }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Total Sampel</td>
-                            <td><span class="badge bg-success fs-6">{{ dataset_info.total_samples }}</span></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Setelah Augmentasi</td>
-                            <td><span class="badge bg-primary fs-6">{{ dataset_info.augmented_samples }}</span></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Jumlah Kelas</td>
-                            <td><span class="badge bg-info fs-6">{{ dataset_info.classes }} Kelas</span></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="card h-100 p-4">
-                    <h5 class="fw-bold mb-3">Distribusi Kelas</h5>
-                    <div class="d-flex flex-column gap-2">
-                        {% for cls in dataset_info.class_list %}
-                        <div class="class-badge">
-                            <div class="step-icon bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }}">
-                                <i class="bi {{ cls.icon }}"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">{{ cls.name }}</div>
-                                <div class="progress mt-1" style="height:6px;">
-                                    <div class="progress-bar bg-{{ cls.color }}"
-                                         style="width: {% widthratio cls.count|add:0 928 100 %}%"></div>
-                                </div>
-                            </div>
-                            <span class="badge bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }} fw-bold fs-6">
-                                {{ cls.count }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
                 </div>
             </div>
         </div>
