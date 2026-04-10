@@ -101,26 +101,70 @@
                 </tbody>
             </table>
         </div>
+
         <!-- Pagination -->
         {% if page_obj.has_other_pages %}
         <div class="card-footer">
-            <nav>
+            <nav aria-label="Navigasi Halaman">
                 <ul class="pagination justify-content-center mb-0">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status }}">‹</a>
+                        <a class="page-link" href="?page=1&search={{ search }}&status={{ status }}">
+                            <i class="bi bi-chevron-double-left"></i> Pertama
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status }}">
+                            <i class="bi bi-chevron-left"></i> Sebelumnya
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-left"></i> Pertama</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Sebelumnya</span>
                     </li>
                     {% endif %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-                    </li>
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&search={{ search }}&status={{ status }}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status }}">›</a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status }}">
+                            Berikutnya <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&search={{ search }}&status={{ status }}">
+                            Terakhir <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Berikutnya <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Terakhir <i class="bi bi-chevron-double-right"></i></span>
                     </li>
                     {% endif %}
                 </ul>
             </nav>
+            <p class="text-center text-muted mt-2 mb-0">
+                Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}
+            </p>
         </div>
         {% endif %}
     </div>

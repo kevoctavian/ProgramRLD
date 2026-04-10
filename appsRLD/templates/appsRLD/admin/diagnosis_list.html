@@ -46,49 +46,56 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th>#</th>
-                        <th>Gambar</th>
-                        <th>User</th>
-                        <th>Penyakit</th>
-                        <th>Confidence</th>
-                        <th>Waktu</th>
-                        <th class="text-center">Aksi</th>
+                        <th class="align-middle">No</th>
+                        <th class="align-middle">Gambar</th>
+                        <th class="align-middle">User</th>
+                        <th class="align-middle">Penyakit</th>
+                        <th class="align-middle">Confidence</th>
+                        <th class="align-middle">Waktu</th>
+                        <th class="align-middle text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in page_obj %}
                     <tr>
-                        <td class="text-muted small">{{ forloop.counter }}</td>
-                        <td>
-                            <img src="{{ d.image.image.url }}" alt=""
-                                 style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
+                        <td class="align-middle text-muted small">{{ forloop.counter }}</td>
+                        <td class="align-middle">
+                            <img src="{{ d.image.image.url }}" 
+                                alt="{{ d.image.original_filename }}"
+                                style="width:100px; height:100px; object-fit:cover; border-radius:8px;
+                                        cursor:pointer; transition: transform 0.2s;"
+                                onmouseover="this.style.transform='scale(1.2)'"
+                                onmouseout="this.style.transform='scale(1)'"
+                                title="{{ d.image.original_filename }}">
                         </td>
-                        <td>
+                        <td class="align-middle">
                             <a href="{% url 'appsRLD:admin_user_detail' d.image.user.id %}"
-                               class="fw-semibold text-decoration-none">
+                            class="fw-semibold text-decoration-none">
                                 {{ d.image.user.username|default:"?" }}
                             </a>
                         </td>
-                        <td>
-                            <span class="badge bg-secondary">
+                        <td class="align-middle">
+                            <span class="badge bg-secondary" style="font-size: 0.9rem;">
                                 {{ d.predicted_disease.display_name|default:"?" }}
                             </span>
                         </td>
-                        <td>
+                        <td class="align-middle">
                             <span class="fw-bold {% if d.max_confidence >= 80 %}text-success{% elif d.max_confidence >= 60 %}text-warning{% else %}text-danger{% endif %}">
                                 {{ d.max_confidence|floatformat:1 }}%
                             </span>
                         </td>
-                        <td><small class="text-muted">{{ d.diagnosed_at|date:"d M Y, H:i" }}</small></td>
-                        <td class="text-center">
+                        <td class="align-middle">
+                            <small class="text-muted">{{ d.diagnosed_at|date:"d M Y, H:i" }}</small>
+                        </td>
+                        <td class="align-middle text-center">
                             <a href="{% url 'appsRLD:result' d.id %}"
-                               class="btn btn-sm btn-outline-primary me-1">
+                            class="btn btn-sm btn-outline-primary me-1">
                                 <i class="bi bi-eye"></i>
                             </a>
                             <form method="post"
-                                  action="{% url 'appsRLD:admin_delete_diagnosis' d.id %}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Hapus diagnosis ini?')">
+                                action="{% url 'appsRLD:admin_delete_diagnosis' d.id %}"
+                                class="d-inline"
+                                onsubmit="return confirm('Hapus diagnosis ini?')">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i>
@@ -106,19 +113,69 @@
                 </tbody>
             </table>
         </div>
+
         {% if page_obj.has_other_pages %}
         <div class="card-footer">
-            <nav>
+            <nav aria-label="Navigasi Halaman">
                 <ul class="pagination justify-content-center mb-0">
                     {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&disease={{ disease_filter }}">‹</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&search={{ search }}&disease={{ disease_filter }}">
+                            <i class="bi bi-chevron-double-left"></i> Pertama
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&disease={{ disease_filter }}">
+                            <i class="bi bi-chevron-left"></i> Sebelumnya
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-left"></i> Pertama</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i> Sebelumnya</span>
+                    </li>
                     {% endif %}
-                    <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&search={{ search }}&disease={{ disease_filter }}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
                     {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&disease={{ disease_filter }}">›</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&disease={{ disease_filter }}">
+                            Berikutnya <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&search={{ search }}&disease={{ disease_filter }}">
+                            Terakhir <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Berikutnya <i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Terakhir <i class="bi bi-chevron-double-right"></i></span>
+                    </li>
                     {% endif %}
                 </ul>
             </nav>
+            <p class="text-center text-muted mt-2 mb-0">
+                Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}
+            </p>
         </div>
         {% endif %}
     </div>

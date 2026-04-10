@@ -1175,7 +1175,7 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
         active_users   = User.objects.filter(is_staff=False, is_active=True).count()
         inactive_users = User.objects.filter(is_staff=False, is_active=False).count()
         total_diagnoses = DiagnosisResult.objects.count()
-        total_images    = RiceLeafImage.objects.count()
+        diagnoses_today = DiagnosisResult.objects.filter(diagnosed_at__date=timezone.now().date()).count()
         avg_confidence  = DiagnosisResult.objects.aggregate(avg=Avg('max_confidence'))['avg'] or 0
  
         disease_dist = DiagnosisResult.objects.filter(
@@ -1211,7 +1211,7 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             'active_users':     active_users,
             'inactive_users':   inactive_users,
             'total_diagnoses':  total_diagnoses,
-            'total_images':     total_images,
+            'diagnoses_today':  diagnoses_today,
             'avg_confidence':   round(avg_confidence, 2),
             'disease_dist':     json.dumps(list(disease_dist)),
             'recent_users':     recent_users,
