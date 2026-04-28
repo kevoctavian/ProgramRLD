@@ -37,9 +37,6 @@ urlpatterns = [
     # Statistics
     path('statistics/', views.StatisticsDashboardView.as_view(), name='statistics'),
 
-    # About
-    path('about/', views.AboutView.as_view(), name='about'),
-
     # API
     path('api/predict/', views.ApiQuickPredictView.as_view(), name='api_predict'),
 
@@ -50,4 +47,5 @@ urlpatterns = [
     path('admin-panel/users/<int:user_id>/toggle/', views.AdminToggleUserView.as_view(), name='admin_toggle_user'),
     path('admin-panel/diagnoses/', views.AdminDiagnosisListView.as_view(), name='admin_diagnosis_list'),
     path('admin-panel/diagnoses/delete/<int:diagnosis_id>/', views.AdminDeleteDiagnosisView.as_view(), name='admin_delete_diagnosis'),
+    path('admin-panel/about/', views.AboutView.as_view(), name='about'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

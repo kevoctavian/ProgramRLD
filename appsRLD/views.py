@@ -853,131 +853,7 @@ class StatisticsDashboardView(TemplateView):
 #             {'number': 4, 'label': 'Klasifikasi',      'desc': 'Voting Ensemble (RF + ET + GB)'},
 #             {'number': 5, 'label': 'Output',           'desc': 'Jenis penyakit + confidence score'},
 #         ]
-
 #         return context
-class AboutView(LoginRequiredMixin, TemplateView):
-    template_name = 'appsRLD/about.html'
-    login_url = '/login/'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        try:
-            from appsRLD.models import ModelTrainingHistory
-            latest_training = ModelTrainingHistory.objects.filter(is_active=True).first()
-        except Exception:
-            latest_training = None
-
-        context['latest_training'] = latest_training
-
-        # =====================================================================
-        # Visualisasi
-        # =====================================================================
-        import os
-        VIZ_DIR = os.path.join(settings.BASE_DIR, 'ml_models', 'visualizations')
-        context['confusion_matrix_exists'] = os.path.exists(os.path.join(VIZ_DIR, 'confusion_matrix.png'))
-        context['roc_curve_exists']        = os.path.exists(os.path.join(VIZ_DIR, 'roc_curve.png'))
-
-        # =====================================================================
-        # Dataset
-        # =====================================================================
-        context['dataset_info'] = {
-            'name': 'Rice Leaf and Crop Disease Detection Dataset',
-            'source': 'Mendeley Data',
-            'total_samples': latest_training.total_samples if latest_training else '2,804',
-            'augmented_samples': '~5,000+',
-            'classes': 4,
-            'class_list': [
-                {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger',  'icon': 'bi-bug-fill'},
-                {'name': 'Rice Blast',            'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
-                {'name': 'Tungro',                'count': '537', 'color': 'info',    'icon': 'bi-virus2'},
-                {'name': 'Healthy',               'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
-            ]
-        }
-
-        # =====================================================================
-        # Performa Model
-        # =====================================================================
-        acc  = round(latest_training.accuracy,  1) if latest_training else 93
-        prec = round(latest_training.precision, 1) if latest_training else 93
-        rec  = round(latest_training.recall,    1) if latest_training else 93
-        f1   = round(latest_training.f1_score,  1) if latest_training else 93
-
-        # Per-class dari DB jika tersedia, fallback hardcoded
-        per_class_detail = latest_training.get_per_class_list() if latest_training else [
-            {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
-            {'name': 'Rice Blast',       'precision': 94, 'recall': 93, 'f1': 93, 'support': 135, 'color': 'warning'},
-            {'name': 'Tungro',           'precision': 91, 'recall': 90, 'f1': 91, 'support': 81,  'color': 'info'},
-            {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
-        ]
-
-        context['model_performance'] = {
-            'accuracy':  acc,
-            'precision': prec,
-            'recall':    rec,
-            'f1_score':  f1,
-            # Per-class untuk progress bar akurasi — ambil f1 dari per_class_detail
-            'per_class': [
-                {
-                    'name':     cls['name'],
-                    'accuracy': cls['f1'],
-                    'color':    cls['color'],
-                }
-                for cls in per_class_detail
-            ] if per_class_detail else [
-                {'name': 'Bacterial Blight', 'accuracy': 89, 'color': 'danger'},
-                {'name': 'Rice Blast',       'accuracy': 94, 'color': 'warning'},
-                {'name': 'Tungro',           'accuracy': 91, 'color': 'info'},
-                {'name': 'Healthy',          'accuracy': 98, 'color': 'success'},
-            ]
-        }
-
-        # =====================================================================
-        # Training & Testing Scores
-        # =====================================================================
-        total   = latest_training.total_samples       if latest_training else 2804
-        train_n = latest_training.training_samples    if latest_training else 1963
-        val_n   = latest_training.validation_samples  if latest_training else 420
-        test_n  = latest_training.test_samples        if latest_training else 421
-        smote_n = latest_training.samples_after_smote if latest_training else 2600
-
-        val_acc  = round(latest_training.val_accuracy, 2) if (latest_training and latest_training.val_accuracy) else 84.76
-        test_acc = round(latest_training.accuracy,     2) if latest_training else 93.00
-        test_pre = round(latest_training.precision,    2) if latest_training else 93.00
-        test_rec = round(latest_training.recall,       2) if latest_training else 93.00
-        test_f1  = round(latest_training.f1_score,     2) if latest_training else 93.00
-
-        context['training_scores'] = {
-            'train_val': [
-                {'label': 'Akurasi Validasi',   'value': val_acc,  'color': 'primary'},
-                {'label': 'Akurasi Pengujian',  'value': test_acc, 'color': 'success'},
-                {'label': 'Presisi Pengujian',  'value': test_pre, 'color': 'info'},
-                {'label': 'Recall Pengujian',   'value': test_rec, 'color': 'warning'},
-                {'label': 'F1-Score Pengujian', 'value': test_f1,  'color': 'danger'},
-            ],
-            'per_class_detail': per_class_detail,
-            'split_info': {
-                'total':       total,
-                'train':       train_n,
-                'val':         val_n,
-                'test':        test_n,
-                'smote_after': smote_n,
-            }
-        }
-
-        # =====================================================================
-        # Tech Stack
-        # =====================================================================
-        context['tech_stack'] = [
-            {'name': 'Django 5.2',   'icon': 'bi-server',         'color': 'success', 'desc': 'Web Framework'},
-            {'name': 'Python 3.13',  'icon': 'bi-code-slash',     'color': 'primary', 'desc': 'Programming Language'},
-            {'name': 'Scikit-learn', 'icon': 'bi-robot',          'color': 'warning', 'desc': 'Machine Learning'},
-            {'name': 'OpenCV',       'icon': 'bi-camera-fill',    'color': 'info',    'desc': 'Image Processing'},
-            {'name': 'PostgreSQL',   'icon': 'bi-database-fill',  'color': 'primary', 'desc': 'Database'},
-            {'name': 'Bootstrap 5',  'icon': 'bi-bootstrap-fill', 'color': 'purple',  'desc': 'UI Framework'},
-        ]
-
-        return context
 
 
 # ========== REGISTER ==========
@@ -1162,6 +1038,164 @@ class AdminRequiredMixin(LoginRequiredMixin):
             return redirect('appsRLD:home')
         return super().dispatch(request, *args, **kwargs)
     
+class AboutView(AdminRequiredMixin, TemplateView):
+    template_name = 'appsRLD/about.html'
+    login_url = '/login/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        try:
+            from appsRLD.models import ModelTrainingHistory
+            latest_training = ModelTrainingHistory.objects.filter(is_active=True).first()
+        except Exception:
+            latest_training = None
+
+        context['latest_training'] = latest_training
+
+        # =====================================================================
+        # Visualisasi
+        # =====================================================================
+        import os
+        VIZ_DIR = os.path.join(settings.BASE_DIR, 'ml_models', 'visualizations')
+        context['confusion_matrix_exists'] = os.path.exists(os.path.join(VIZ_DIR, 'confusion_matrix.png'))
+        context['roc_curve_exists']        = os.path.exists(os.path.join(VIZ_DIR, 'roc_curve.png'))
+
+        # =====================================================================
+        # Dataset
+        # =====================================================================
+        context['dataset_info'] = {
+            'name': 'Rice Leaf and Crop Disease Detection Dataset',
+            'source': 'Mendeley Data',
+            'total_samples': latest_training.total_samples if latest_training else '2,804',
+            'augmented_samples': '~5,000+',
+            'classes': 4,
+            'class_list': [
+                {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger',  'icon': 'bi-bug-fill'},
+                {'name': 'Rice Blast',            'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
+                {'name': 'Tungro',                'count': '537', 'color': 'info',    'icon': 'bi-virus2'},
+                {'name': 'Healthy',               'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
+            ]
+        }
+
+        # =====================================================================
+        # Performa Model
+        # =====================================================================
+        acc  = round(latest_training.accuracy,  1) if latest_training else 93
+        prec = round(latest_training.precision, 1) if latest_training else 93
+        rec  = round(latest_training.recall,    1) if latest_training else 93
+        f1   = round(latest_training.f1_score,  1) if latest_training else 93
+
+        # Per-class dari DB jika tersedia, fallback hardcoded
+        per_class_detail = latest_training.get_per_class_list() if latest_training else [
+            {'name': 'Bacterial Blight', 'precision': 89, 'recall': 87, 'f1': 88, 'support': 66,  'color': 'danger'},
+            {'name': 'Rice Blast',       'precision': 94, 'recall': 93, 'f1': 93, 'support': 135, 'color': 'warning'},
+            {'name': 'Tungro',           'precision': 91, 'recall': 90, 'f1': 91, 'support': 81,  'color': 'info'},
+            {'name': 'Healthy',          'precision': 98, 'recall': 99, 'f1': 98, 'support': 139, 'color': 'success'},
+        ]
+
+        context['model_performance'] = {
+            'accuracy':  acc,
+            'precision': prec,
+            'recall':    rec,
+            'f1_score':  f1,
+            # Per-class untuk progress bar akurasi — ambil f1 dari per_class_detail
+            'per_class': [
+                {
+                    'name':     cls['name'],
+                    'accuracy': cls['f1'],
+                    'color':    cls['color'],
+                }
+                for cls in per_class_detail
+            ] if per_class_detail else [
+                {'name': 'Bacterial Blight', 'accuracy': 89, 'color': 'danger'},
+                {'name': 'Rice Blast',       'accuracy': 94, 'color': 'warning'},
+                {'name': 'Tungro',           'accuracy': 91, 'color': 'info'},
+                {'name': 'Healthy',          'accuracy': 98, 'color': 'success'},
+            ]
+        }
+
+        # =====================================================================
+        # Training & Testing Scores
+        # =====================================================================
+        total   = latest_training.total_samples       if latest_training else 2804
+        train_n = latest_training.training_samples    if latest_training else 1963
+        val_n   = latest_training.validation_samples  if latest_training else 420
+        test_n  = latest_training.test_samples        if latest_training else 421
+        smote_n = latest_training.samples_after_smote if latest_training else 2600
+
+        val_acc  = round(latest_training.val_accuracy, 2) if (latest_training and latest_training.val_accuracy) else 84.76
+        test_acc = round(latest_training.accuracy,     2) if latest_training else 93.00
+        test_pre = round(latest_training.precision,    2) if latest_training else 93.00
+        test_rec = round(latest_training.recall,       2) if latest_training else 93.00
+        test_f1  = round(latest_training.f1_score,     2) if latest_training else 93.00
+
+        context['training_scores'] = {
+            'train_val': [
+                {'label': 'Akurasi Validasi',   'value': val_acc,  'color': 'primary'},
+                {'label': 'Akurasi Pengujian',  'value': test_acc, 'color': 'success'},
+                {'label': 'Presisi Pengujian',  'value': test_pre, 'color': 'info'},
+                {'label': 'Recall Pengujian',   'value': test_rec, 'color': 'warning'},
+                {'label': 'F1-Score Pengujian', 'value': test_f1,  'color': 'danger'},
+            ],
+            'per_class_detail': per_class_detail,
+            'split_info': {
+                'total':       total,
+                'train':       train_n,
+                'val':         val_n,
+                'test':        test_n,
+                'smote_after': smote_n,
+            }
+        }
+
+        # =====================================================================
+        # Tech Stack
+        # =====================================================================
+        context['tech_stack'] = [
+            {'name': 'Django 5.2',   'icon': 'bi-server',         'color': 'success', 'desc': 'Web Framework'},
+            {'name': 'Python 3.13',  'icon': 'bi-code-slash',     'color': 'primary', 'desc': 'Programming Language'},
+            {'name': 'Scikit-learn', 'icon': 'bi-robot',          'color': 'warning', 'desc': 'Machine Learning'},
+            {'name': 'OpenCV',       'icon': 'bi-camera-fill',    'color': 'info',    'desc': 'Image Processing'},
+            {'name': 'PostgreSQL',   'icon': 'bi-database-fill',  'color': 'primary', 'desc': 'Database'},
+            {'name': 'Bootstrap 5',  'icon': 'bi-bootstrap-fill', 'color': 'purple',  'desc': 'UI Framework'},
+        ]
+
+        # =====================================================================
+        # Methodology
+        # =====================================================================
+        context['methodology'] = {
+            'preprocessing': [
+                {'icon': 'bi-arrows-angle-contract', 'color': '#3498db', 'title': 'Resizing',
+                 'desc': 'Mengubah ukuran gambar menjadi 256x256 piksel untuk konsistensi input model.'},
+                {'icon': 'bi-circle-half',           'color': '#9b59b6', 'title': 'Grayscale Conversion',
+                 'desc': 'Mengkonversi gambar RGB ke grayscale untuk menyederhanakan analisis tekstur.'},
+                {'icon': 'bi-wind',                  'color': '#1abc9c', 'title': 'Gaussian Filter',
+                 'desc': 'Mengurangi noise pada gambar menggunakan kernel 5x5 untuk hasil ekstraksi fitur yang lebih bersih.'},
+                {'icon': 'bi-sliders',               'color': '#e67e22', 'title': 'Normalisasi',
+                 'desc': 'Menormalkan nilai piksel ke rentang 0-255 agar fitur GLCM lebih stabil.'},
+            ],
+            'feature_extraction': [
+                {'icon': 'bi-grid-3x3',    'color': '#e74c3c', 'title': 'GLCM (24 Fitur)',
+                 'desc': 'Gray Level Co-occurrence Matrix pada 4 sudut (0, 45, 90, 135 derajat): Contrast, Dissimilarity, Homogeneity, Energy, Correlation, ASM.'},
+                {'icon': 'bi-palette-fill','color': '#f39c12', 'title': 'Color Features (39 Fitur)',
+                 'desc': 'Fitur warna dari ruang warna HSV dan LAB: mean, std, skewness per channel + histogram BGR 8 bins.'},
+                {'icon': 'bi-layout-wtf',  'color': '#2ecc71', 'title': 'LBP (29 Fitur)',
+                 'desc': 'Local Binary Pattern dengan radius=3, n_points=24: histogram uniform LBP + statistik mean, std, entropy.'},
+            ],
+            'handling_imbalanced': [
+                {'icon': 'bi-bezier2',         'color': '#8e44ad', 'title': 'BorderlineSMOTE',
+                 'desc': 'Synthetic Minority Over-sampling Technique versi Borderline untuk menghasilkan sampel sintetis yang lebih representatif di batas keputusan.'},
+                {'icon': 'bi-arrow-left-right', 'color': '#16a085', 'title': 'Data Augmentasi',
+                 'desc': 'Flip horizontal/vertikal, rotasi 90/180 derajat, dan variasi brightness untuk kelas minoritas (Bacterial Blight dan Tungro).'},
+            ],
+            'classification': [
+                {'icon': 'bi-tree-fill', 'color': '#27ae60', 'title': 'Random Forest',
+                 'desc': 'Ensemble learning berbasis decision tree dengan GridSearchCV untuk optimasi hyperparameter (n_estimators, max_depth, max_features). Menggunakan class_weight=balanced untuk menangani ketidakseimbangan kelas.'},
+            ],
+        }
+
+        return context
+    
 # ========== ADMIN DASHBOARD ==========
 class AdminDashboardView(AdminRequiredMixin, TemplateView):
     template_name = 'appsRLD/admin/dashboard.html'
@@ -1190,33 +1224,37 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             'image', 'image__user', 'predicted_disease'
         ).order_by('-diagnosed_at')[:10]
  
-        # === PERHARI: 30 hari terakhir ===
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        daily_data = DiagnosisResult.objects.filter(
-            diagnosed_at__gte=thirty_days_ago
-        ).annotate(
-            day=TruncDate('diagnosed_at')
-        ).values('day').annotate(count=Count('id')).order_by('day')
- 
-        daily_diagnoses = [
-            {
-                'day': item['day'].strftime('%d %b') if item['day'] else '',
-                'count': item['count']
-            }
-            for item in daily_data
-        ]
- 
+        # === Penyakit Terbanyak Bulan Ini ===
+        this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        top_diseases_month = list(
+            DiagnosisResult.objects.filter(
+                diagnosed_at__gte=this_month,
+                predicted_disease__isnull=False
+            ).values('predicted_disease__display_name', 'predicted_disease__name').annotate(
+                count=Count('id')
+            ).order_by('-count')[:5]
+        )
+
+        # === Akurasi Model ===
+        try:
+            from appsRLD.models import ModelTrainingHistory
+            latest_training = ModelTrainingHistory.objects.filter(is_active=True).first()
+            model_accuracy = round(latest_training.accuracy, 1) if latest_training else 0
+        except Exception:
+            model_accuracy = 0
+
         context.update({
-            'total_users':      total_users,
-            'active_users':     active_users,
-            'inactive_users':   inactive_users,
-            'total_diagnoses':  total_diagnoses,
-            'diagnoses_today':  diagnoses_today,
-            'avg_confidence':   round(avg_confidence, 2),
-            'disease_dist':     json.dumps(list(disease_dist)),
-            'recent_users':     recent_users,
-            'recent_diagnoses': recent_diagnoses,
-            'daily_diagnoses':  json.dumps(daily_diagnoses),
+            'total_users':          total_users,
+            'active_users':         active_users,
+            'inactive_users':       inactive_users,
+            'total_diagnoses':      total_diagnoses,
+            'diagnoses_today':      diagnoses_today,
+            'avg_confidence':       round(avg_confidence, 2),
+            'disease_dist':         json.dumps(list(disease_dist)),
+            'recent_users':         recent_users,
+            'recent_diagnoses':     recent_diagnoses,
+            'top_diseases_month':   top_diseases_month,
+            'model_accuracy':       model_accuracy,
             'total_bacterial_blight': DiagnosisResult.objects.filter(predicted_disease__name='bacterial_blight').count(),
             'total_rice_blast':       DiagnosisResult.objects.filter(predicted_disease__name='rice_blast').count(),
             'total_tungro':           DiagnosisResult.objects.filter(predicted_disease__name='tungro').count(),

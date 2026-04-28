@@ -8,9 +8,41 @@
         padding: 1.5rem;
         color: white;
         box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
+    .admin-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    .admin-stat-card.clickable { cursor: pointer; }
     .admin-stat-card h3 { font-size: 2.5rem; font-weight: 800; margin: 0; }
     .admin-stat-card p  { margin: 0.3rem 0 0; opacity: 0.9; }
+
+    .disease-month-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.9rem;
+        border-radius: 8px;
+        background: #f8f9fa;
+        margin-bottom: 0.5rem;
+    }
+    .disease-month-item:last-child { margin-bottom: 0; }
+    .rank-badge {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.8rem;
+        flex-shrink: 0;
+        color: white;
+    }
+    .disease-bar-wrap { flex: 1; }
+    .disease-bar-label {
+        display: flex; justify-content: space-between;
+        font-size: 0.85rem; font-weight: 500; margin-bottom: 3px;
+    }
+    .disease-bar { height: 8px; border-radius: 4px; background: #e9ecef; }
+    .disease-bar-fill { height: 100%; border-radius: 4px; }
 </style>
 {% endblock %}
 
@@ -25,92 +57,109 @@
         </div>
     </div>
 
-    <!-- Stat Cards -->
+    <!-- ===== STAT CARDS: 3 kotak ===== -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="admin-stat-card" style="background:linear-gradient(135deg,#3498db,#2980b9);">
-                <i class="bi bi-people-fill" style="font-size:2rem;opacity:0.8;"></i>
-                <h3>{{ total_users }}</h3>
-                <p>Total User</p>
-            </div>
+        <!-- Total Diagnosis — bisa diklik ke halaman diagnosis -->
+        <div class="col-12 col-md-4">
+            <a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="text-decoration-none">
+                <div class="admin-stat-card clickable" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+                    <i class="bi bi-clipboard2-pulse-fill" style="font-size:2rem;opacity:0.8;"></i>
+                    <h3>{{ total_diagnoses }}</h3>
+                    <p>Total Diagnosis <i class="bi bi-arrow-right-circle ms-1" style="font-size:0.85rem;"></i></p>
+                </div>
+            </a>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="admin-stat-card" style="background:linear-gradient(135deg,#2ecc71,#27ae60);">
-                <i class="bi bi-person-check-fill" style="font-size:2rem;opacity:0.8;"></i>
-                <h3>{{ active_users }}</h3>
-                <p>User Aktif</p>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="admin-stat-card" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
-                <i class="bi bi-clipboard2-pulse-fill" style="font-size:2rem;opacity:0.8;"></i>
-                <h3>{{ total_diagnoses }}</h3>
-                <p>Total Diagnosis</p>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
+        <!-- Diagnosis Hari Ini -->
+        <div class="col-12 col-md-4">
             <div class="admin-stat-card" style="background:linear-gradient(135deg,#f39c12,#e67e22);">
-                <i class="bi bi-images" style="font-size:2rem;opacity:0.8;"></i>
+                <i class="bi bi-calendar-check-fill" style="font-size:2rem;opacity:0.8;"></i>
                 <h3>{{ diagnoses_today }}</h3>
                 <p>Diagnosis Hari Ini</p>
             </div>
         </div>
-    </div>
-
-    <!-- Disease Summary -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card p-3 text-center border-danger border-2">
-                <div class="text-danger fw-bold fs-4">{{ total_bacterial_blight }}</div>
-                <small class="text-muted">Bacterial Blight</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 text-center border-warning border-2">
-                <div class="text-warning fw-bold fs-4">{{ total_rice_blast }}</div>
-                <small class="text-muted">Rice Blast</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 text-center border-info border-2">
-                <div class="text-info fw-bold fs-4">{{ total_tungro }}</div>
-                <small class="text-muted">Tungro</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3 text-center border-success border-2">
-                <div class="text-success fw-bold fs-4">{{ total_healthy }}</div>
-                <small class="text-muted">Healthy</small>
+        <!-- Akurasi Model -->
+        <div class="col-12 col-md-4">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#2ecc71,#27ae60);">
+                <i class="bi bi-bullseye" style="font-size:2rem;opacity:0.8;"></i>
+                <h3>{{ model_accuracy }}%</h3>
+                <p>Akurasi Model</p>
             </div>
         </div>
     </div>
 
+    <!-- ===== CHART + PENYAKIT BULAN INI ===== -->
     <div class="row g-4 mb-4">
-        <!-- Grafik Harian -->
-        <div class="col-lg-8">
-            <div class="card p-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h5 class="fw-bold mb-0">
-                        <i class="bi bi-graph-up text-success"></i> Diagnosis per Hari
-                    </h5>
-                    <span class="badge bg-light text-muted border">30 Hari Terakhir</span>
+
+        <!-- Penyakit Terbanyak Bulan Ini -->
+        <div class="col-lg-5">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-calendar-month-fill text-warning"></i>
+                    Penyakit Terbanyak Bulan Ini
+                </h5>
+                {% if top_diseases_month %}
+                    {% for item in top_diseases_month %}
+                    {% with total_diagnoses as td %}
+                    <div class="disease-month-item">
+                        <div class="rank-badge" style="background-color:
+                            {% if forloop.counter == 1 %}#e74c3c
+                            {% elif forloop.counter == 2 %}#f39c12
+                            {% elif forloop.counter == 3 %}#3498db
+                            {% elif forloop.counter == 4 %}#2ecc71
+                            {% else %}#95a5a6{% endif %};">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="disease-bar-wrap">
+                            <div class="disease-bar-label">
+                                <span>{{ item.predicted_disease__display_name }}</span>
+                                <span class="fw-bold">{{ item.count }}</span>
+                            </div>
+                            <div class="disease-bar">
+                                <div class="disease-bar-fill" style="
+                                    width: {% widthratio item.count top_diseases_month.0.count 100 %}%;
+                                    background-color:
+                                        {% if forloop.counter == 1 %}#e74c3c
+                                        {% elif forloop.counter == 2 %}#f39c12
+                                        {% elif forloop.counter == 3 %}#3498db
+                                        {% elif forloop.counter == 4 %}#2ecc71
+                                        {% else %}#95a5a6{% endif %};">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-calendar-x" style="font-size:2.5rem;"></i>
+                    <p class="mt-2 mb-0">Belum ada diagnosis bulan ini.</p>
                 </div>
-                <canvas id="dailyChart" height="100"></canvas>
+                {% endif %}
             </div>
         </div>
-        <!-- Grafik Penyakit -->
-        <div class="col-lg-4">
-            <div class="card p-4">
+
+        <!-- Sebaran Penyakit (Pie) -->
+        <div class="col-lg-7">
+            <div class="card p-4 h-100">
                 <h5 class="fw-bold mb-3">
                     <i class="bi bi-pie-chart-fill text-info"></i> Sebaran Penyakit
                 </h5>
-                <canvas id="diseaseChart" height="200"></canvas>
+                {% if total_diagnoses > 0 %}
+                <div style="max-height:320px; display:flex; justify-content:center;">
+                    <canvas id="diseaseChart"></canvas>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-pie-chart" style="font-size:2.5rem;"></i>
+                    <p class="mt-2 mb-0">Belum ada data diagnosis.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
+    <!-- ===== USER TERBARU + DIAGNOSIS TERBARU ===== -->
     <div class="row g-4">
-        <!-- User Terbaru -->
         <div class="col-lg-5">
             <div class="card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -224,84 +273,74 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ===== Grafik Diagnosis Per Hari =====
-    var daily = {{ daily_diagnoses|safe }};
+    var dd = {{ disease_dist|safe }};
+    if (!dd || dd.length === 0) return;
 
-    if (daily.length) {
-        new Chart(document.getElementById('dailyChart'), {
-            type: 'line',
-            data: {
-                labels: daily.map(i => i.day),
-                datasets: [{
-                    label: 'Jumlah Diagnosis',
-                    data: daily.map(i => i.count),
-                    backgroundColor: 'rgba(46, 204, 113, 0.15)',
-                    borderColor: '#2ecc71',
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#2ecc71',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            title: function(items) { return items[0].label; },
-                            label: function(item) { return ' ' + item.raw + ' diagnosis'; }
+    var labels  = dd.map(function(i) { return i.predicted_disease__display_name; });
+    var counts  = dd.map(function(i) { return i.count; });
+    var total   = counts.reduce(function(a, b) { return a + b; }, 0);
+    var colors  = ['#e74c3c', '#f39c12', '#3498db', '#2ecc71', '#95a5a6'];
+    var borders = ['#c0392b', '#d4ac0d', '#2980b9', '#27ae60', '#7f8c8d'];
+
+    var ctx = document.getElementById('diseaseChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: colors,
+                borderColor: borders,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 14 } },
+                tooltip: {
+                    callbacks: {
+                        /* Saat hover: hanya nama penyakit */
+                        title: function() { return ''; },
+                        label: function(context) {
+                            return ' ' + context.label;
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { maxRotation: 45, font: { size: 11 } }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { precision: 0, font: { size: 11 } },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
-                    }
                 }
             }
-        });
-    } else {
-        document.getElementById('dailyChart').closest('.card').innerHTML +=
-            '<p class="text-center text-muted mt-3"><i class="bi bi-bar-chart-line"></i> Belum ada data diagnosis dalam 30 hari terakhir.</p>';
-    }
-
-    // ===== Grafik Sebaran Penyakit =====
-    var dd = {{ disease_dist|safe }};
-
-    if (dd.length) {
-        new Chart(document.getElementById('diseaseChart'), {
-            type: 'doughnut',
-            data: {
-                labels: dd.map(i => i.predicted_disease__display_name),
-                datasets: [{
-                    data: dd.map(i => i.count),
-                    backgroundColor: ['#e74c3c', '#f39c12', '#3498db', '#2ecc71'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
-                }
+        },
+        /* Plugin inline: tampilkan jumlah + persentase langsung di slice */
+        plugins: [{
+            id: 'sliceLabels',
+            afterDraw: function(chart) {
+                var ctx2 = chart.ctx;
+                chart.data.datasets.forEach(function(dataset, di) {
+                    var meta = chart.getDatasetMeta(di);
+                    meta.data.forEach(function(element, index) {
+                        var value = dataset.data[index];
+                        if (value === 0) return;
+                        var pct = (value / total * 100).toFixed(1);
+                        var pos = element.tooltipPosition();
+                        ctx2.save();
+                        ctx2.font         = 'bold 12px Segoe UI, sans-serif';
+                        ctx2.fillStyle    = 'white';
+                        ctx2.textAlign    = 'center';
+                        ctx2.textBaseline = 'middle';
+                        ctx2.shadowColor  = 'rgba(0,0,0,0.6)';
+                        ctx2.shadowBlur   = 4;
+                        /* Baris 1: jumlah */
+                        ctx2.fillText(value, pos.x, pos.y - 7);
+                        /* Baris 2: persentase */
+                        ctx2.font = '11px Segoe UI, sans-serif';
+                        ctx2.fillText('(' + pct + '%)', pos.x, pos.y + 8);
+                        ctx2.restore();
+                    });
+                });
             }
-        });
-    } else {
-        document.getElementById('diseaseChart').closest('.card').innerHTML +=
-            '<p class="text-center text-muted mt-3"><i class="bi bi-pie-chart"></i> Belum ada data penyakit.</p>';
-    }
-
+        }]
+    });
 });
 </script>
 {% endblock %}

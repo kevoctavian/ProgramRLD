@@ -330,20 +330,21 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_diagnosis_list' %}active{% endif %}"
+                                        href="{% url 'appsRLD:admin_diagnosis_list' %}">
+                                            <i class="bi bi-clipboard2-pulse-fill"></i> Diagnosis
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+                                        href="{% url 'appsRLD:about' %}">
+                                            <i class="bi bi-book-fill"></i> Tentang Sistem
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link {% if request.resolver_match.url_name == 'admin_user_list' %}active{% endif %}"
                                         href="{% url 'appsRLD:admin_user_list' %}">
                                             <i class="bi bi-people-fill"></i> Kelola User
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_diagnosis_list' %}active{% endif %}"
-                                        href="{% url 'appsRLD:admin_diagnosis_list' %}">
-                                            <i class="bi bi-clipboard2-pulse-fill"></i> Semua Diagnosis
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="{% url 'appsRLD:statistics' %}">
-                                            <i class="bi bi-bar-chart-fill"></i> Statistik
                                         </a>
                                     </li>
                                     <li class="nav-item dropdown">
@@ -399,18 +400,6 @@
                                         <a class="nav-link {% if request.resolver_match.url_name == 'disease_list' %}active{% endif %}"
                                         href="{% url 'appsRLD:disease_list' %}">
                                             <i class="bi bi-info-circle-fill"></i> Info Penyakit
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}"
-                                        href="{% url 'appsRLD:statistics' %}">
-                                            <i class="bi bi-bar-chart-fill"></i> Statistik
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
-                                        href="{% url 'appsRLD:about' %}">
-                                            <i class="bi bi-book-fill"></i> Tentang Aplikasi
                                         </a>
                                     </li>
                                     {% if user.is_authenticated %}
@@ -487,9 +476,9 @@
                     <h6>Menu Admin</h6>
                     <ul class="list-unstyled">
                         <li><a href="{% url 'appsRLD:admin_dashboard' %}" class="text-white-50">Dashboard</a></li>
+                        <li><a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="text-white-50">Diagnosis</a></li>
+                        <li><a href="{% url 'appsRLD:about' %}" class="text-white-50">Tentang Sistem</a></li>
                         <li><a href="{% url 'appsRLD:admin_user_list' %}" class="text-white-50">Kelola User</a></li>
-                        <li><a href="{% url 'appsRLD:admin_diagnosis_list' %}" class="text-white-50">Semua Diagnosis</a></li>
-                        <li><a href="{% url 'appsRLD:statistics' %}" class="text-white-50">Statistik</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
@@ -517,7 +506,6 @@
                         <li><a href="{% url 'appsRLD:home' %}" class="text-white-50">Beranda</a></li>
                         <li><a href="{% url 'appsRLD:upload' %}" class="text-white-50">Foto & Deteksi</a></li>
                         <li><a href="{% url 'appsRLD:disease_list' %}" class="text-white-50">Info Penyakit</a></li>
-                        <li><a href="{% url 'appsRLD:about' %}" class="text-white-50">Tentang Aplikasi</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
