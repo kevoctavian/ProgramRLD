@@ -48,10 +48,10 @@
                     <tr>
                         <th class="align-middle">No</th>
                         <th class="align-middle">Gambar</th>
-                        <th class="align-middle">User</th>
                         <th class="align-middle">Penyakit</th>
                         <th class="align-middle">Confidence</th>
                         <th class="align-middle">Waktu</th>
+                        <th class="align-middle">User</th>
                         <th class="align-middle text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -69,12 +69,6 @@
                                 title="{{ d.image.original_filename }}">
                         </td>
                         <td class="align-middle">
-                            <a href="{% url 'appsRLD:admin_user_detail' d.image.user.id %}"
-                            class="fw-semibold text-decoration-none">
-                                {{ d.image.user.username|default:"?" }}
-                            </a>
-                        </td>
-                        <td class="align-middle">
                             <span class="badge bg-secondary" style="font-size: 0.9rem;">
                                 {{ d.predicted_disease.display_name|default:"?" }}
                             </span>
@@ -86,6 +80,12 @@
                         </td>
                         <td class="align-middle">
                             <small class="text-muted">{{ d.diagnosed_at|date:"d M Y, H:i" }}</small>
+                        </td>
+                        <td class="align-middle">
+                            <a href="{% url 'appsRLD:admin_user_detail' d.image.user.id %}"
+                            class="fw-semibold text-decoration-none">
+                                {{ d.image.user.username|default:"?" }}
+                            </a>
                         </td>
                         <td class="align-middle text-center">
                             <a href="{% url 'appsRLD:result' d.id %}"
