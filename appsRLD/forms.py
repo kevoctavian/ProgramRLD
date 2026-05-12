@@ -74,19 +74,31 @@ class FeedbackForm(forms.ModelForm):
     """
     Form untuk user memberikan feedback pada hasil diagnosis
     """
-    
+
+    def to_bool(val):
+        if val in (True, 'True', 'true', '1', 1):
+            return True
+        if val in (False, 'False', 'false', '0', 0):
+            return False
+        return None
+
+    is_correct = forms.TypedChoiceField(
+        label='Apakah Prediksi Benar?',
+        choices=[
+            ('', '-- Pilih --'),
+            ('True', 'Prediksi Benar'),
+            ('False', 'Prediksi Salah'),
+        ],
+        coerce=lambda v: True if v == 'True' else (False if v == 'False' else None),
+        empty_value=None,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+
     class Meta:
         model = DiagnosisResult
         fields = ['is_correct', 'actual_disease', 'notes']
         widgets = {
-            'is_correct': forms.Select(
-                choices=[
-                    (None, '-- Pilih --'),
-                    (True, 'Prediksi Benar'),
-                    (False, 'Prediksi Salah')
-                ],
-                attrs={'class': 'form-select'}
-            ),
             'actual_disease': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -95,14 +107,12 @@ class FeedbackForm(forms.ModelForm):
             })
         }
         labels = {
-            'is_correct': 'Apakah Prediksi Benar?',
             'actual_disease': 'Penyakit Sebenarnya (jika salah)',
             'notes': 'Catatan Tambahan'
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make actual_disease required only if is_correct is False
         self.fields['actual_disease'].required = False
         self.fields['notes'].required = False
 

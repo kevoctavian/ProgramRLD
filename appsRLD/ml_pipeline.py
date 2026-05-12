@@ -187,10 +187,6 @@ class LBPFeatureExtractor:
 
 # ========== COMBINED PIPELINE ==========
 class RiceDiseasePipeline:
-    """
-    Complete ML Pipeline dengan GLCM + Color + LBP features
-    Total fitur: 24 (GLCM) + 39 (Color) + 29 (LBP) = 92 fitur
-    """
 
     def __init__(self, model_path=None):
         self.preprocessor = ImagePreprocessor()
@@ -216,16 +212,6 @@ class RiceDiseasePipeline:
             self.load_model(model_path)
 
     def validate_rice_leaf(self, bgr_image):
-            """
-            Validasi apakah gambar adalah daun padi.
-    
-            Pendekatan berlapis:
-            A. Daun di atas background putih/abu → deteksi foreground elongated + berwarna
-            B. Kertas/dokumen → low_sat + high_val + foreground tidak elongated
-            C. Poster/desain grafis → dominant single hue + MSER text tinggi
-            D. Hewan/benda → warna tubuh tidak wajar + bentuk blob
-            E. Scoring normal untuk foto lapangan (daun memenuhi frame)
-            """
             h, w = bgr_image.shape[:2]
             total_pixels = h * w
             gray      = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
@@ -235,7 +221,7 @@ class RiceDiseasePipeline:
             reasons   = []
     
             # ==============================================================
-            # STEP 1: Pisahkan background putih/abu dari foreground (daun)
+            # STEP 1
             # ==============================================================
             white_bg  = cv2.inRange(hsv, np.array([0, 0, 160]), np.array([180, 40, 255]))
             gray_bg   = cv2.inRange(hsv, np.array([0, 0, 100]), np.array([180, 35, 200]))
@@ -245,8 +231,7 @@ class RiceDiseasePipeline:
             bg_ratio  = cv2.countNonZero(bg_mask) / total_pixels
     
             # ==============================================================
-            # STEP 2: Analisis bentuk foreground
-            # Daun padi selalu elongated (aspect > 2.5)
+            # STEP 2
             # ==============================================================
             leaf_aspect   = 0.0
             leaf_solidity = 0.0
@@ -283,9 +268,7 @@ class RiceDiseasePipeline:
             organic_nb = min(green_nb + yellow_nb + brown_nb, 1.0)
     
             # ==============================================================
-            # KASUS A: Foto daun di atas background putih/abu-abu
-            # Ciri khas: bg tinggi, foreground elongated, berwarna
-            # Contoh: foto daun padi diletakkan di kertas putih
+            # KASUS A
             # ==============================================================
             is_leaf_on_white_bg = (
                 bg_ratio > 0.40 and        # dominan background terang
@@ -319,8 +302,7 @@ class RiceDiseasePipeline:
                 }
     
             # ==============================================================
-            # KASUS B: Kertas / Dokumen
-            # Bedanya dari KASUS A: tidak ada foreground elongated berwarna
+            # KASUS B
             # ==============================================================
             low_sat_total  = np.sum(hsv[:, :, 1] < 30) / total_pixels
             high_val_total = np.sum(hsv[:, :, 2] > 200) / total_pixels
@@ -345,7 +327,7 @@ class RiceDiseasePipeline:
                 return self._invalid_result(-50, ["gambar hitam-putih/grayscale tanpa warna daun"])
     
             # ==============================================================
-            # KASUS C: Poster / Desain Grafis
+            # KASUS C
             # ==============================================================
             hue_hist   = cv2.calcHist([hsv], [0], None, [180], [0, 180])
             dom_hue    = float(hue_hist.max()) / total_pixels
@@ -379,7 +361,7 @@ class RiceDiseasePipeline:
                 )
     
             # ==============================================================
-            # KASUS D: Hewan / Benda Non-Daun
+            # KASUS D
             # ==============================================================
             orange_m2 = cv2.inRange(hsv, np.array([  8, 100, 100]), np.array([ 28, 255, 255]))
             teal_m    = cv2.inRange(hsv, np.array([ 80,  80,  80]), np.array([110, 255, 220]))
@@ -408,7 +390,7 @@ class RiceDiseasePipeline:
                 )
     
             # ==============================================================
-            # KASUS E: Scoring normal — foto lapangan (daun memenuhi frame)
+            # KASUS E
             # ==============================================================
             green_total   = cv2.countNonZero(green_m)  / total_pixels
             yellow_total  = cv2.countNonZero(yellow_m) / total_pixels

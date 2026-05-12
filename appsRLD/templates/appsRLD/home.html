@@ -164,16 +164,28 @@
         <i class="bi bi-star-fill text-warning"></i> Penilaian dari Pengguna
     </h2>
     <div class="card p-4">
-        {% if total_feedback > 0 %}
+        {% if total_diagnoses > 0 %}
         <div class="row align-items-center">
+            <!-- Angka akurasi -->
             <div class="col-md-4 text-center mb-3 mb-md-0">
+                {% if total_feedback > 0 %}
                 <div style="font-size:3.5rem; font-weight:800; color:#2ecc71; line-height:1;">
                     {{ accuracy_rate|floatformat:1 }}%
                 </div>
                 <div class="text-muted mt-1">Hasil Akurat</div>
                 <div class="text-muted small">dari {{ total_feedback }} penilaian</div>
+                {% else %}
+                <div style="font-size:3.5rem; font-weight:800; color:#bdc3c7; line-height:1;">
+                    —
+                </div>
+                <div class="text-muted mt-1">Belum ada penilaian</div>
+                <div class="text-muted small">dari {{ total_diagnoses }} diagnosis</div>
+                {% endif %}
             </div>
+
+            <!-- Progress bar & info -->
             <div class="col-md-8">
+                {% if total_feedback > 0 %}
                 <div class="mb-2 d-flex justify-content-between">
                     <span class="fw-semibold text-success">
                         <i class="bi bi-check-circle-fill"></i> Prediksi Benar
@@ -181,7 +193,8 @@
                     <span class="fw-bold">{{ correct_predictions }}</span>
                 </div>
                 <div class="progress feedback-bar mb-3">
-                    <div class="progress-bar bg-success" style="width:{{ accuracy_rate }}%">
+                    <div class="progress-bar bg-success"
+                         style="width:{% widthratio correct_predictions total_feedback 100 %}%">
                         {% if accuracy_rate > 10 %}{{ accuracy_rate|floatformat:1 }}%{% endif %}
                     </div>
                 </div>
@@ -189,23 +202,56 @@
                     <span class="fw-semibold text-danger">
                         <i class="bi bi-x-circle-fill"></i> Prediksi Salah
                     </span>
-                    <span class="fw-bold">{{ total_feedback|add:"-"|add:correct_predictions }}</span>
+                    <span class="fw-bold">{{ wrong_predictions }}</span>
                 </div>
-                <div class="progress feedback-bar">
-                    <div class="progress-bar bg-danger" style="width:{% widthratio total_feedback|add:"-"|add:correct_predictions total_feedback 100 %}%">
+                <div class="progress feedback-bar mb-3">
+                    <div class="progress-bar bg-danger"
+                         style="width:{% widthratio wrong_predictions total_feedback 100 %}%">
                     </div>
                 </div>
-                <p class="text-muted small mt-3 mb-0">
-                    <i class="bi bi-info-circle"></i>
-                    Berikan penilaian pada halaman detail hasil deteksi untuk membantu meningkatkan akurasi sistem.
+                {% else %}
+                <!-- Belum ada feedback sama sekali — tampilkan bar kosong -->
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="fw-semibold text-success">
+                        <i class="bi bi-check-circle-fill"></i> Prediksi Benar
+                    </span>
+                    <span class="fw-bold text-muted">0</span>
+                </div>
+                <div class="progress feedback-bar mb-3">
+                    <div class="progress-bar bg-success" style="width:0%"></div>
+                </div>
+                <div class="mb-2 d-flex justify-content-between">
+                    <span class="fw-semibold text-danger">
+                        <i class="bi bi-x-circle-fill"></i> Prediksi Salah
+                    </span>
+                    <span class="fw-bold text-muted">0</span>
+                </div>
+                <div class="progress feedback-bar mb-3">
+                    <div class="progress-bar bg-danger" style="width:0%"></div>
+                </div>
+                {% endif %}
+
+                <!-- Info pending feedback -->
+                {% if total_diagnoses > total_feedback %}
+                <div class="alert alert-warning py-2 mb-0 small">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <strong>{{ total_diagnoses|add:"-0" }}</strong> diagnosis belum dinilai.
+                    Buka <a href="{% url 'appsRLD:history' %}" class="alert-link">riwayat deteksi</a>
+                    dan klik detail untuk memberikan penilaian.
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-check2-circle text-success"></i>
+                    Semua diagnosis sudah dinilai. Terima kasih atas kontribusi Anda!
                 </p>
+                {% endif %}
             </div>
         </div>
         {% else %}
         <div class="text-center py-4 text-muted">
             <i class="bi bi-chat-square-heart" style="font-size:2.5rem;"></i>
-            <p class="mt-2 mb-0">Belum ada penilaian dari pengguna.<br>
-            <small>Berikan penilaian pada setiap hasil deteksi Anda!</small></p>
+            <p class="mt-2 mb-0">Belum ada diagnosis yang bisa dinilai.<br>
+            <small>Mulai dengan <a href="{% url 'appsRLD:upload' %}">upload foto daun padi</a> Anda!</small></p>
         </div>
         {% endif %}
     </div>

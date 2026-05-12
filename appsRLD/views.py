@@ -99,7 +99,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context.update({
             'model_accuracy': model_accuracy,
             'recent_diagnoses': recent_diagnoses,
-            'disease_distribution': list(disease_distribution),
+            'disease_distribution': json.dumps(list(disease_distribution)),
             'model_loaded': pipeline.model is not None,
             # Statistik per user
             'total_images': total_images,
@@ -119,6 +119,14 @@ class HomeView(LoginRequiredMixin, TemplateView):
             'total_healthy': base_qs.filter(
                 predicted_disease__name='healthy'
             ).count(),
+            # Penilaian pengguna
+            'total_feedback': base_qs.exclude(is_correct__isnull=True).count(),
+            'correct_predictions': base_qs.filter(is_correct=True).count(),
+            'accuracy_rate': (
+                base_qs.filter(is_correct=True).count() /
+                base_qs.exclude(is_correct__isnull=True).count() * 100
+            ) if base_qs.exclude(is_correct__isnull=True).count() > 0 else 0,
+            'wrong_predictions': base_qs.filter(is_correct=False).count(),
         })
         return context
 
@@ -455,7 +463,16 @@ class DiagnosisResultView(LoginRequiredMixin, View):
 
         feedback_form = FeedbackForm(request.POST, instance=diagnosis)
         if feedback_form.is_valid():
-            feedback_form.save()
+            obj = feedback_form.save(commit=False)
+            # Pastikan is_correct tersimpan dengan benar sebagai boolean
+            raw = request.POST.get('is_correct', '')
+            if raw == 'True':
+                obj.is_correct = True
+            elif raw == 'False':
+                obj.is_correct = False
+            else:
+                obj.is_correct = None
+            obj.save()
             messages.success(request, "Terima kasih atas feedback Anda!")
             return redirect('appsRLD:result', diagnosis_id=diagnosis.id)
 
@@ -1071,10 +1088,34 @@ class AboutView(AdminRequiredMixin, TemplateView):
             'augmented_samples': '~5,000+',
             'classes': 4,
             'class_list': [
-                {'name': 'Bacterial Leaf Blight', 'count': '442', 'color': 'danger',  'icon': 'bi-bug-fill'},
-                {'name': 'Rice Blast',            'count': '897', 'color': 'warning', 'icon': 'bi-virus'},
-                {'name': 'Tungro',                'count': '537', 'color': 'info',    'icon': 'bi-virus2'},
-                {'name': 'Healthy',               'count': '928', 'color': 'success', 'icon': 'bi-heart-fill'},
+                {
+                    'name': 'Bacterial Leaf Blight',
+                    'count': '442',
+                    'color': 'danger',
+                    'image': '/media/images/img_RLB.jpg',
+                    'desc': 'Penyakit bakteri yang menyebabkan daun mengering dari ujung dan tepi, meninggalkan bekas kuning kecoklatan memanjang. Disebabkan oleh Xanthomonas oryzae pv. oryzae.',
+                },
+                {
+                    'name': 'Rice Blast',
+                    'count': '897',
+                    'color': 'warning',
+                    'image': '/media/images/img_RB.jpg',
+                    'desc': 'Penyakit jamur paling merusak pada padi, membentuk bercak berbentuk berlian dengan tepi coklat dan pusat abu-abu. Disebabkan oleh Magnaporthe oryzae.',
+                },
+                {
+                    'name': 'Tungro',
+                    'count': '537',
+                    'color': 'info',
+                    'image': '/media/images/img_tungro.jpg',
+                    'desc': 'Penyakit virus yang menyebabkan daun menguning-oranye dari ujung ke bawah dan menghambat pertumbuhan tanaman. Ditularkan oleh wereng hijau Nephotettix virescens.',
+                },
+                {
+                    'name': 'Healthy',
+                    'count': '928',
+                    'color': 'success',
+                    'image': '/media/images/img_healthy.jpg',
+                    'desc': 'Daun padi dalam kondisi sehat, berwarna hijau merata, tidak terdapat bercak, perubahan warna, maupun tanda-tanda infeksi penyakit.',
+                },
             ]
         }
 

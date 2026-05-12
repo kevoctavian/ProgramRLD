@@ -78,6 +78,222 @@
     }
     .viz-img:hover { transform: scale(1.015); }
 
+    /* ===== FLOW CHART ===== */
+    .flow-chart-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 1rem 0.5rem;
+    }
+    .flow-node {
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+    .flow-shape {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 2.5px solid;
+        border-radius: 12px;
+        padding: 0.75rem 0.6rem;
+        width: 100px;
+        min-height: 90px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .flow-shape-oval {
+        border-radius: 50px;
+    }
+    .flow-node:hover .flow-shape,
+    .flow-node.active .flow-shape {
+        transform: translateY(-5px) scale(1.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .flow-node.active .flow-shape {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        filter: brightness(0.95);
+    }
+    .flow-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        color: white;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .flow-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1.3;
+    }
+    .flow-arrow-h {
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        color: #bdc3c7;
+        flex-shrink: 0;
+    }
+
+    /* ===== FLOW DETAIL CARDS ===== */
+    .flow-detail-card {
+        display: none;
+        border-left: 5px solid;
+        border-radius: 0 12px 12px 0;
+        background: white;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        animation: slideDown 0.3s ease-out;
+    }
+    .flow-detail-card.active {
+        display: block;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .flow-detail-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.2rem;
+        color: white;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    .flow-detail-body {
+        padding: 1.2rem;
+    }
+    .flow-detail-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        height: 100%;
+    }
+    .flow-detail-item i {
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    /* ===== FLOW VIZ ===== */
+    .flow-viz-arrow {
+        font-size: 1.4rem;
+        color: #bdc3c7;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    /* ===== FEAT VIZ CARD ===== */
+    .feat-viz-card {
+        background: #fafafa;
+        border-radius: 10px;
+        padding: 1rem;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .feat-viz-title {
+        font-weight: 700;
+        font-size: 0.88rem;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .feat-viz-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.4rem;
+    }
+    .feat-viz-badges span {
+        border-radius: 20px;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    /* ===== AUGMENTASI VIZ ===== */
+    .aug-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.6rem;
+        margin-top: 0.8rem;
+    }
+    .aug-item {
+        text-align: center;
+    }
+    .aug-item canvas {
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto 0.3rem;
+        width: 100%;
+        max-width: 120px;
+        height: 90px;
+    }
+    .aug-item .aug-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #555;
+    }
+
+    /* ===== DISEASE IMAGE CARD ===== */
+    .disease-img-card {
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .disease-img-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+    .disease-img-wrap {
+        position: relative;
+        overflow: hidden;
+        height: 170px;
+    }
+    .disease-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.35s;
+    }
+    .disease-img-card:hover .disease-img-wrap img {
+        transform: scale(1.08);
+    }
+    .disease-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(30, 39, 46, 0.82);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        text-align: center;
+    }
+    .disease-img-card:hover .disease-img-overlay {
+        opacity: 1;
+    }
+    .disease-img-footer {
+        padding: 0.85rem 1rem;
+    }
+
     /* ===== METHODOLOGY CARDS ===== */
     .method-section-header {
         display: flex; align-items: center; gap: 0.75rem;
@@ -159,57 +375,490 @@
         <h2 class="section-title-admin">
             <i class="bi bi-database-fill"></i> Dataset
         </h2>
-        <div class="row g-4">
-            <div class="col-md-5">
-                <div class="card h-100 p-4">
-                    <h6 class="fw-bold mb-3">Informasi Dataset</h6>
-                    <table class="table table-borderless mb-0 small">
-                        <tr>
-                            <td class="text-muted">Nama</td>
-                            <td class="fw-semibold">{{ dataset_info.name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Sumber</td>
-                            <td class="fw-semibold">{{ dataset_info.source }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Total Sampel</td>
-                            <td><span class="badge bg-dark fs-6">{{ dataset_info.total_samples }}</span></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Setelah Augmentasi</td>
-                            <td><span class="badge" style="background:#2980b9;" class="fs-6">{{ dataset_info.augmented_samples }}</span></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Jumlah Kelas</td>
-                            <td><span class="badge bg-secondary fs-6">{{ dataset_info.classes }} Kelas</span></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div class="col-md-7">
-                <div class="card h-100 p-4">
-                    <h6 class="fw-bold mb-3">Distribusi Kelas</h6>
-                    {% for cls in dataset_info.class_list %}
-                    <div class="class-badge">
-                        <div class="step-icon bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }}">
-                            <i class="bi {{ cls.icon }}"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold small">{{ cls.name }}</div>
-                            <div class="progress mt-1">
-                                <div class="progress-bar bg-{{ cls.color }}"
-                                     style="width: {% widthratio cls.count|add:0 928 100 %}%"></div>
-                            </div>
-                        </div>
-                        <span class="badge bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }} fw-bold">
-                            {{ cls.count }}
-                        </span>
+
+        <!-- Info Dataset -->
+        <div class="card p-4 mb-4">
+            <h6 class="fw-bold mb-3">Informasi Dataset</h6>
+            <div class="row g-3 text-center">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded bg-light">
+                        <div class="text-muted small fw-bold">Sumber</div>
+                        <div class="fw-semibold small mt-1">{{ dataset_info.source }}</div>
                     </div>
-                    {% endfor %}
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded bg-light">
+                        <div class="text-muted small fw-bold">Total Sampel</div>
+                        <div class="fs-5 fw-bold text-dark">{{ dataset_info.total_samples }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded bg-light">
+                        <div class="text-muted small fw-bold">Setelah Augmentasi</div>
+                        <div class="fs-5 fw-bold" style="color:#2980b9;">{{ dataset_info.augmented_samples }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded bg-light">
+                        <div class="text-muted small fw-bold">Jumlah Kelas</div>
+                        <div class="fs-5 fw-bold text-secondary">{{ dataset_info.classes }} Kelas</div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Distribusi Kelas — Card Bergambar -->
+        <h6 class="fw-bold mb-3 ps-1">Distribusi Kelas</h6>
+        <div class="row g-4">
+            {% for cls in dataset_info.class_list %}
+            <div class="col-6 col-lg-3">
+                <div class="disease-img-card border-top border-4 border-{{ cls.color }}">
+                    <div class="disease-img-wrap">
+                        {% load static %}
+                        <img src="{{ cls.image }}" alt="{{ cls.name }}"
+                             onerror="this.src='https://placehold.co/400x260/e9ecef/6c757d?text=No+Image';">
+                        <div class="disease-img-overlay">
+                            <p class="mb-0">{{ cls.desc }}</p>
+                        </div>
+                    </div>
+                    <div class="disease-img-footer">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="fw-bold" style="font-size:0.88rem;">{{ cls.name }}</span>
+                            <span class="badge bg-{{ cls.color }} bg-opacity-10 text-{{ cls.color }} fw-bold">
+                                {{ cls.count }}
+                            </span>
+                        </div>
+                        <div class="progress mt-2" style="height:6px;">
+                            <div class="progress-bar bg-{{ cls.color }}"
+                                 style="width: {% widthratio cls.count|add:0 928 100 %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ===== FLOW SISTEM ===== -->
+    <div class="mb-5">
+        <h2 class="section-title-admin">
+            <i class="bi bi-diagram-3-fill"></i> Alur Sistem
+        </h2>
+        <p class="text-muted mb-4">Klik setiap tahapan untuk melihat penjelasan detailnya.</p>
+
+        <!-- FLOWCHART SVG-STYLE HORIZONTAL -->
+        <div class="card p-4 mb-4">
+            <div class="flow-chart-wrap">
+
+                <!-- Step 1: Pengumpulan Dataset -->
+                <a href="javascript:void(0)" class="flow-node" data-step="1" onclick="activateStep(1)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#3498db; background:#ebf5fb;">
+                        <div class="flow-icon" style="background:#3498db;"><i class="bi bi-database-fill"></i></div>
+                        <div class="flow-label">Pengumpulan<br>Dataset</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 2: Preprocessing -->
+                <a href="javascript:void(0)" class="flow-node" data-step="2" onclick="activateStep(2)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#9b59b6; background:#f5eef8;">
+                        <div class="flow-icon" style="background:#9b59b6;"><i class="bi bi-sliders"></i></div>
+                        <div class="flow-label">Preprocessing<br>Gambar</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 3: Ekstraksi Fitur -->
+                <a href="javascript:void(0)" class="flow-node" data-step="3" onclick="activateStep(3)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#e74c3c; background:#fdedec;">
+                        <div class="flow-icon" style="background:#e74c3c;"><i class="bi bi-grid-3x3"></i></div>
+                        <div class="flow-label">Ekstraksi<br>Fitur</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 4: Handling Imbalanced -->
+                <a href="javascript:void(0)" class="flow-node" data-step="4" onclick="activateStep(4)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#8e44ad; background:#f4ecf7;">
+                        <div class="flow-icon" style="background:#8e44ad;"><i class="bi bi-bezier2"></i></div>
+                        <div class="flow-label">Handling<br>Imbalanced</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 5: Training Model -->
+                <a href="javascript:void(0)" class="flow-node" data-step="5" onclick="activateStep(5)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#27ae60; background:#eafaf1;">
+                        <div class="flow-icon" style="background:#27ae60;"><i class="bi bi-tree-fill"></i></div>
+                        <div class="flow-label">Training<br>Model RF</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 6: Evaluasi -->
+                <a href="javascript:void(0)" class="flow-node" data-step="6" onclick="activateStep(6)">
+                    <div class="flow-shape flow-shape-rect" style="border-color:#f39c12; background:#fef9e7;">
+                        <div class="flow-icon" style="background:#f39c12;"><i class="bi bi-bar-chart-fill"></i></div>
+                        <div class="flow-label">Evaluasi<br>Model</div>
+                    </div>
+                </a>
+
+                <div class="flow-arrow-h"><i class="bi bi-arrow-right-circle-fill" style="color:#bdc3c7;"></i></div>
+
+                <!-- Step 7: Output -->
+                <a href="javascript:void(0)" class="flow-node" data-step="7" onclick="activateStep(7)">
+                    <div class="flow-shape flow-shape-oval" style="border-color:#2c3e50; background:#eaecee;">
+                        <div class="flow-icon" style="background:#2c3e50;"><i class="bi bi-check-circle-fill"></i></div>
+                        <div class="flow-label">Prediksi<br>Penyakit</div>
+                    </div>
+                </a>
+
+            </div><!-- end flow-chart-wrap -->
+        </div>
+
+        <!-- DETAIL CARDS — tampil saat diklik -->
+        <div id="flow-detail-1" class="flow-detail-card" style="border-left-color:#3498db;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#3498db,#2980b9);">
+                <i class="bi bi-database-fill me-2"></i>
+                <span>① Pengumpulan Dataset</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-images" style="color:#3498db;"></i>
+                            <div>
+                                <div class="fw-bold small">Sumber Dataset</div>
+                                <div class="text-muted small">Rice Leaf and Crop Disease Detection Dataset dari Mendeley Data, berisi 2.804 gambar daun padi.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-tags-fill" style="color:#3498db;"></i>
+                            <div>
+                                <div class="fw-bold small">4 Kelas Penyakit</div>
+                                <div class="text-muted small">Bacterial Blight (442), Rice Blast (897), Tungro (537), dan Healthy (928 gambar).</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-file-earmark-image" style="color:#3498db;"></i>
+                            <div>
+                                <div class="fw-bold small">Format Gambar</div>
+                                <div class="text-muted small">Format JPG/PNG resolusi bervariasi, merupakan foto lapangan daun padi asli.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-2" class="flow-detail-card" style="border-left-color:#9b59b6;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);">
+                <i class="bi bi-sliders me-2"></i>
+                <span>② Preprocessing Gambar</span>
+            </div>
+            <div class="flow-detail-body">
+                <!-- Visualisasi pipeline preprocessing -->
+                <p class="text-muted small mb-3"><i class="bi bi-info-circle"></i> Ilustrasi transformasi gambar pada setiap tahap preprocessing menggunakan Canvas.</p>
+                <!-- Pilih gambar sumber -->
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                    <span class="fw-semibold small text-muted">Pilih gambar:</span>
+                    <button class="btn btn-sm btn-outline-danger prepBtn active" data-src="/media/images/img_RLB.jpg">Bacterial Blight</button>
+                    <button class="btn btn-sm btn-outline-warning prepBtn" data-src="/media/images/img_RB.jpg">Rice Blast</button>
+                    <button class="btn btn-sm btn-outline-info prepBtn" data-src="/media/images/img_tungro.jpg">Tungro</button>
+                    <button class="btn btn-sm btn-outline-success prepBtn" data-src="/media/images/img_healthy.jpg">Healthy</button>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-4" style="justify-content:center;">
+                    <div class="text-center">
+                        <div class="fw-bold small mb-1" style="color:#9b59b6;">Original</div>
+                        <canvas id="cvOri" width="130" height="130" style="border-radius:8px;border:2px solid #9b59b6;display:block;"></canvas>
+                        <div class="text-muted" style="font-size:0.7rem;">BGR · Resolusi asli</div>
+                    </div>
+                    <div class="flow-viz-arrow">→</div>
+                    <div class="text-center">
+                        <div class="fw-bold small mb-1" style="color:#3498db;">Resize</div>
+                        <canvas id="cvResize" width="130" height="130" style="border-radius:8px;border:2px solid #3498db;display:block;"></canvas>
+                        <div class="text-muted" style="font-size:0.7rem;">256×256 px</div>
+                    </div>
+                    <div class="flow-viz-arrow">→</div>
+                    <div class="text-center">
+                        <div class="fw-bold small mb-1" style="color:#7f8c8d;">Grayscale</div>
+                        <canvas id="cvGray" width="130" height="130" style="border-radius:8px;border:2px solid #7f8c8d;display:block;"></canvas>
+                        <div class="text-muted" style="font-size:0.7rem;">1 channel</div>
+                    </div>
+                    <div class="flow-viz-arrow">→</div>
+                    <div class="text-center">
+                        <div class="fw-bold small mb-1" style="color:#1abc9c;">Gaussian</div>
+                        <canvas id="cvBlur" width="130" height="130" style="border-radius:8px;border:2px solid #1abc9c;display:block;"></canvas>
+                        <div class="text-muted" style="font-size:0.7rem;">Kernel 5×5</div>
+                    </div>
+                    <div class="flow-viz-arrow">→</div>
+                    <div class="text-center">
+                        <div class="fw-bold small mb-1" style="color:#e67e22;">Normalize</div>
+                        <canvas id="cvNorm" width="130" height="130" style="border-radius:8px;border:2px solid #e67e22;display:block;"></canvas>
+                        <div class="text-muted" style="font-size:0.7rem;">0–255</div>
+                    </div>
+                </div>
+                <!-- Penjelasan ringkas -->
+                <div class="row g-2 mt-1">
+                    <div class="col-md-3"><div class="flow-detail-item p-2"><i class="bi bi-arrows-angle-contract" style="color:#3498db;font-size:1.1rem;"></i><div><div class="fw-bold" style="font-size:0.78rem;">Resizing</div><div class="text-muted" style="font-size:0.73rem;">256×256 px via INTER_AREA</div></div></div></div>
+                    <div class="col-md-3"><div class="flow-detail-item p-2"><i class="bi bi-circle-half" style="color:#7f8c8d;font-size:1.1rem;"></i><div><div class="fw-bold" style="font-size:0.78rem;">Grayscale</div><div class="text-muted" style="font-size:0.73rem;">BGR → 1 channel abu-abu</div></div></div></div>
+                    <div class="col-md-3"><div class="flow-detail-item p-2"><i class="bi bi-wind" style="color:#1abc9c;font-size:1.1rem;"></i><div><div class="fw-bold" style="font-size:0.78rem;">Gaussian Filter</div><div class="text-muted" style="font-size:0.73rem;">Reduksi noise kernel 5×5</div></div></div></div>
+                    <div class="col-md-3"><div class="flow-detail-item p-2"><i class="bi bi-sliders" style="color:#e67e22;font-size:1.1rem;"></i><div><div class="fw-bold" style="font-size:0.78rem;">Normalisasi</div><div class="text-muted" style="font-size:0.73rem;">NORM_MINMAX → 0–255</div></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-3" class="flow-detail-card" style="border-left-color:#e74c3c;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+                <i class="bi bi-grid-3x3 me-2"></i>
+                <span>③ Ekstraksi Fitur — Total 92 Fitur</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-4">
+
+                    <!-- GLCM -->
+                    <div class="col-lg-4">
+                        <div class="feat-viz-card" style="border-top:3px solid #e74c3c;">
+                            <div class="feat-viz-title" style="color:#e74c3c;">
+                                <i class="bi bi-grid-3x3"></i> GLCM — 24 Fitur
+                            </div>
+                            <canvas id="cvGLCM" width="220" height="120" style="display:block;margin:0.5rem auto;"></canvas>
+                            <div class="feat-viz-badges">
+                                <span style="background:#fdecea;color:#e74c3c;">Contrast</span>
+                                <span style="background:#fdecea;color:#e74c3c;">Dissimilarity</span>
+                                <span style="background:#fdecea;color:#e74c3c;">Homogeneity</span>
+                                <span style="background:#fdecea;color:#e74c3c;">Energy</span>
+                                <span style="background:#fdecea;color:#e74c3c;">Correlation</span>
+                                <span style="background:#fdecea;color:#e74c3c;">ASM</span>
+                            </div>
+                            <p class="text-muted" style="font-size:0.75rem;margin-top:0.5rem;">Dihitung pada 4 sudut arah (0°, 45°, 90°, 135°) → 6 properti × 4 sudut = 24 fitur tekstur.</p>
+                        </div>
+                    </div>
+
+                    <!-- Color Features -->
+                    <div class="col-lg-4">
+                        <div class="feat-viz-card" style="border-top:3px solid #f39c12;">
+                            <div class="feat-viz-title" style="color:#f39c12;">
+                                <i class="bi bi-palette-fill"></i> Color Features — 39 Fitur
+                            </div>
+                            <canvas id="cvColor" width="220" height="120" style="display:block;margin:0.5rem auto;"></canvas>
+                            <div class="feat-viz-badges">
+                                <span style="background:#fef5e4;color:#e67e22;">HSV · 9 fitur</span>
+                                <span style="background:#fef5e4;color:#e67e22;">LAB · 6 fitur</span>
+                                <span style="background:#fef5e4;color:#e67e22;">Hist BGR · 24 fitur</span>
+                            </div>
+                            <p class="text-muted" style="font-size:0.75rem;margin-top:0.5rem;">Mean, std, skewness tiap channel HSV + LAB, serta histogram 8 bins untuk channel B, G, R.</p>
+                        </div>
+                    </div>
+
+                    <!-- LBP -->
+                    <div class="col-lg-4">
+                        <div class="feat-viz-card" style="border-top:3px solid #2ecc71;">
+                            <div class="feat-viz-title" style="color:#2ecc71;">
+                                <i class="bi bi-layout-wtf"></i> LBP — 29 Fitur
+                            </div>
+                            <canvas id="cvLBP" width="220" height="120" style="display:block;margin:0.5rem auto;"></canvas>
+                            <div class="feat-viz-badges">
+                                <span style="background:#eafaf1;color:#27ae60;">26 bin histogram</span>
+                                <span style="background:#eafaf1;color:#27ae60;">Mean</span>
+                                <span style="background:#eafaf1;color:#27ae60;">Std</span>
+                                <span style="background:#eafaf1;color:#27ae60;">Entropy</span>
+                            </div>
+                            <p class="text-muted" style="font-size:0.75rem;margin-top:0.5rem;">radius=3, n_points=24. Menangkap pola tekstur lokal bercak penyakit pada skala piksel.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-4" class="flow-detail-card" style="border-left-color:#8e44ad;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#8e44ad,#6c3483);">
+                <i class="bi bi-bezier2 me-2"></i>
+                <span>④ Penanganan Data Tidak Seimbang</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-bezier2" style="color:#8e44ad;"></i>
+                            <div>
+                                <div class="fw-bold small">BorderlineSMOTE</div>
+                                <div class="text-muted small">Diterapkan pada data training untuk menyeimbangkan distribusi kelas. Menghasilkan sampel sintetis di area perbatasan keputusan, lebih representatif dibanding SMOTE standar.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-arrow-left-right" style="color:#16a085;"></i>
+                            <div>
+                                <div class="fw-bold small">Data Augmentasi</div>
+                                <div class="text-muted small">Kelas minoritas (Bacterial Blight &lt; 700 gambar) diaugmentasi secara offline: flip horizontal/vertikal, rotasi 90°/180°, dan variasi brightness ±30.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualisasi Augmentasi -->
+                <div class="feat-viz-card" style="border-top:3px solid #16a085;">
+                    <div class="feat-viz-title" style="color:#16a085;">
+                        <i class="bi bi-images"></i> Ilustrasi Hasil Augmentasi
+                    </div>
+                    <p class="text-muted mb-2" style="font-size:0.75rem;">Setiap gambar kelas minoritas menghasilkan 6 variasi tambahan:</p>
+                    <!-- Pilih gambar augmentasi -->
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <span class="fw-semibold small text-muted">Pilih gambar:</span>
+                        <button class="btn btn-sm btn-outline-danger augBtn active" data-src="/media/images/img_RLB.jpg">Bacterial Blight</button>
+                        <button class="btn btn-sm btn-outline-warning augBtn" data-src="/media/images/img_RB.jpg">Rice Blast</button>
+                        <button class="btn btn-sm btn-outline-info augBtn" data-src="/media/images/img_tungro.jpg">Tungro</button>
+                        <button class="btn btn-sm btn-outline-success augBtn" data-src="/media/images/img_healthy.jpg">Healthy</button>
+                    </div>
+                    <div class="aug-grid" id="augGrid">
+                        <div class="aug-item"><canvas id="augOri"></canvas><div class="aug-label">Original</div></div>
+                        <div class="aug-item"><canvas id="augFlipH"></canvas><div class="aug-label">Flip Horizontal</div></div>
+                        <div class="aug-item"><canvas id="augFlipV"></canvas><div class="aug-label">Flip Vertikal</div></div>
+                        <div class="aug-item"><canvas id="augRot90"></canvas><div class="aug-label">Rotasi 90°</div></div>
+                        <div class="aug-item"><canvas id="augRot180"></canvas><div class="aug-label">Rotasi 180°</div></div>
+                        <div class="aug-item"><canvas id="augBright"></canvas><div class="aug-label">Brightness +30</div></div>
+                        <div class="aug-item"><canvas id="augDark"></canvas><div class="aug-label">Brightness -30</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-5" class="flow-detail-card" style="border-left-color:#27ae60;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#27ae60,#1e8449);">
+                <i class="bi bi-tree-fill me-2"></i>
+                <span>⑤ Training Model — Random Forest</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-sliders2" style="color:#27ae60;"></i>
+                            <div>
+                                <div class="fw-bold small">GridSearchCV</div>
+                                <div class="text-muted small">Optimasi hyperparameter dengan 5-Fold Stratified Cross Validation. Parameter: n_estimators [500,700,1000], max_depth [None,30,40], max_features [sqrt, log2].</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-tree-fill" style="color:#27ae60;"></i>
+                            <div>
+                                <div class="fw-bold small">Random Forest</div>
+                                <div class="text-muted small">Ensemble decision tree dengan class_weight=balanced, min_samples_split=2, min_samples_leaf=1 untuk menangani ketidakseimbangan kelas.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-layout-split" style="color:#27ae60;"></i>
+                            <div>
+                                <div class="fw-bold small">Split Data (80/10/10)</div>
+                                <div class="text-muted small">Dataset dibagi menjadi training 80%, validasi 10%, dan pengujian 10% dengan stratified split untuk menjaga proporsi kelas.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-6" class="flow-detail-card" style="border-left-color:#f39c12;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#f39c12,#d68910);">
+                <i class="bi bi-bar-chart-fill me-2"></i>
+                <span>⑥ Evaluasi Model</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-bullseye" style="color:#f39c12;"></i>
+                            <div>
+                                <div class="fw-bold small">Accuracy</div>
+                                <div class="text-muted small">Persentase prediksi benar dari keseluruhan data uji.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-graph-up" style="color:#f39c12;"></i>
+                            <div>
+                                <div class="fw-bold small">Precision & Recall</div>
+                                <div class="text-muted small">Mengukur ketepatan dan kelengkapan prediksi per kelas penyakit.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-grid-3x3-gap-fill" style="color:#f39c12;"></i>
+                            <div>
+                                <div class="fw-bold small">Confusion Matrix</div>
+                                <div class="text-muted small">Matriks visualisasi prediksi benar dan salah per kelas untuk analisis mendalam.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-graph-up-arrow" style="color:#f39c12;"></i>
+                            <div>
+                                <div class="fw-bold small">ROC AUC Curve</div>
+                                <div class="text-muted small">Kurva ROC per kelas dan micro/macro average untuk mengukur kemampuan diskriminasi model.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flow-detail-7" class="flow-detail-card" style="border-left-color:#2c3e50;">
+            <div class="flow-detail-header" style="background:linear-gradient(135deg,#2c3e50,#1a252f);">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span>⑦ Prediksi Penyakit</span>
+            </div>
+            <div class="flow-detail-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-cloud-upload-fill" style="color:#2c3e50;"></i>
+                            <div>
+                                <div class="fw-bold small">Input Gambar</div>
+                                <div class="text-muted small">Pengguna mengupload foto daun padi atau mengambil dari kamera, lalu sistem memvalidasi apakah gambar merupakan daun padi.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-cpu-fill" style="color:#2c3e50;"></i>
+                            <div>
+                                <div class="fw-bold small">Proses Prediksi</div>
+                                <div class="text-muted small">Gambar melalui preprocessing → ekstraksi 92 fitur → scaling → prediksi Random Forest menghasilkan probabilitas tiap kelas.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="flow-detail-item">
+                            <i class="bi bi-clipboard2-check-fill" style="color:#2c3e50;"></i>
+                            <div>
+                                <div class="fw-bold small">Output Hasil</div>
+                                <div class="text-muted small">Sistem menampilkan jenis penyakit yang terdeteksi beserta confidence score dan probabilitas seluruh kelas.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ===== PERFORMA MODEL ===== -->
@@ -581,4 +1230,345 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================================
+// LOAD IMAGE HELPER — load gambar asli dari media/
+// ============================================================
+function loadImage(src, callback) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() { callback(img); };
+    img.onerror = function() {
+        // fallback: buat canvas kosong bergradasi hijau
+        var tmp = document.createElement('canvas');
+        tmp.width = 256; tmp.height = 256;
+        var tc = tmp.getContext('2d');
+        var g = tc.createLinearGradient(0,0,256,256);
+        g.addColorStop(0,'#66bb6a'); g.addColorStop(1,'#2e7d32');
+        tc.fillStyle = g; tc.fillRect(0,0,256,256);
+        callback(tmp);
+    };
+    img.src = src;
+}
+
+// ============================================================
+// TRANSFORM HELPERS
+// ============================================================
+function toGray(imageData) {
+    var d = imageData.data;
+    for (var i = 0; i < d.length; i += 4) {
+        var g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i] = d[i+1] = d[i+2] = g;
+    }
+    return imageData;
+}
+
+function applyBlur(imageData, w, h) {
+    var src = new Uint8ClampedArray(imageData.data);
+    var dst = imageData.data;
+    for (var y = 1; y < h-1; y++) {
+        for (var x = 1; x < w-1; x++) {
+            for (var c = 0; c < 3; c++) {
+                var sum = 0;
+                for (var dy=-1;dy<=1;dy++)
+                    for (var dx=-1;dx<=1;dx++)
+                        sum += src[((y+dy)*w+(x+dx))*4+c];
+                dst[(y*w+x)*4+c] = sum/9;
+            }
+        }
+    }
+    return imageData;
+}
+
+function applyNormalize(imageData) {
+    var d = imageData.data;
+    var min=255, max=0;
+    for (var i=0;i<d.length;i+=4){ min=Math.min(min,d[i]); max=Math.max(max,d[i]); }
+    var range = max-min||1;
+    for (var i=0;i<d.length;i+=4){
+        var v=((d[i]-min)/range)*255;
+        d[i]=d[i+1]=d[i+2]=v;
+    }
+    return imageData;
+}
+
+function drawImgToCanvas(id, imgOrCanvas, grayscale) {
+    var cv = document.getElementById(id);
+    if (!cv) return null;
+    var W=cv.width, H=cv.height;
+    var ctx = cv.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    ctx.drawImage(imgOrCanvas, 0, 0, W, H);
+    if (grayscale) {
+        var id2 = ctx.getImageData(0,0,W,H);
+        ctx.putImageData(toGray(id2), 0,0);
+    }
+    return ctx.getImageData(0,0,W,H);
+}
+
+// ============================================================
+// PREPROCESSING PIPELINE
+// ============================================================
+var currentPrepSrc = '/media/images/img_RLB.jpg';
+
+function drawPreprocessing(src) {
+    src = src || currentPrepSrc;
+    currentPrepSrc = src;
+    var W=130, H=130;
+
+    loadImage(src, function(img) {
+        // 1. Original
+        var cvOri = document.getElementById('cvOri');
+        if (!cvOri) return;
+        var ctxOri = cvOri.getContext('2d');
+        ctxOri.clearRect(0,0,W,H);
+        ctxOri.drawImage(img,0,0,W,H);
+        var oriData = ctxOri.getImageData(0,0,W,H);
+
+        // 2. Resize (sama seperti original, crop tengah simulasi)
+        var cvResize = document.getElementById('cvResize');
+        if (cvResize) {
+            var ctxR = cvResize.getContext('2d');
+            ctxR.clearRect(0,0,W,H);
+            ctxR.drawImage(img,0,0,W,H);
+            // overlay grid kecil sebagai tanda resize
+            ctxR.strokeStyle='rgba(52,152,219,0.5)';
+            ctxR.lineWidth=0.5;
+            for(var g=0;g<W;g+=W/8){
+                ctxR.beginPath();ctxR.moveTo(g,0);ctxR.lineTo(g,H);ctxR.stroke();
+                ctxR.beginPath();ctxR.moveTo(0,g);ctxR.lineTo(W,g);ctxR.stroke();
+            }
+        }
+
+        // 3. Grayscale
+        var grayData = toGray(new ImageData(new Uint8ClampedArray(oriData.data), W, H));
+        var cvGray = document.getElementById('cvGray');
+        if (cvGray) cvGray.getContext('2d').putImageData(grayData, 0, 0);
+
+        // 4. Gaussian blur
+        var blurData = applyBlur(new ImageData(new Uint8ClampedArray(grayData.data), W, H), W, H);
+        var cvBlur = document.getElementById('cvBlur');
+        if (cvBlur) cvBlur.getContext('2d').putImageData(blurData, 0, 0);
+
+        // 5. Normalize
+        var normData = applyNormalize(new ImageData(new Uint8ClampedArray(blurData.data), W, H));
+        var cvNorm = document.getElementById('cvNorm');
+        if (cvNorm) cvNorm.getContext('2d').putImageData(normData, 0, 0);
+    });
+}
+
+// Tombol pilih gambar preprocessing
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.prepBtn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.prepBtn').forEach(function(b){ b.classList.remove('active'); });
+            this.classList.add('active');
+            drawPreprocessing(this.dataset.src);
+        });
+    });
+});
+
+// ============================================================
+// AUGMENTATION
+// ============================================================
+var currentAugSrc = '/media/images/img_RLB.jpg';
+
+function drawAugmentation(src) {
+    src = src || currentAugSrc;
+    currentAugSrc = src;
+    var W=100, H=80;
+
+    var ids = ['augOri','augFlipH','augFlipV','augRot90','augRot180','augBright','augDark'];
+    ids.forEach(function(id){
+        var cv=document.getElementById(id);
+        if(cv){cv.width=W;cv.height=H;}
+    });
+
+    loadImage(src, function(img) {
+        // Original
+        var cvOri = document.getElementById('augOri');
+        if (!cvOri) return;
+        var ctxOri = cvOri.getContext('2d');
+        ctxOri.drawImage(img, 0, 0, W, H);
+
+        function transform(id, fn) {
+            var cv = document.getElementById(id);
+            if (!cv) return;
+            var ctx = cv.getContext('2d');
+            ctx.clearRect(0,0,W,H);
+            ctx.save();
+            fn(ctx);
+            ctx.drawImage(img, 0, 0, W, H);
+            ctx.restore();
+        }
+
+        function transformPixel(id, fn) {
+            var cv = document.getElementById(id);
+            if (!cv) return;
+            var ctx = cv.getContext('2d');
+            ctx.clearRect(0,0,W,H);
+            ctx.drawImage(img, 0, 0, W, H);
+            var id2 = ctx.getImageData(0,0,W,H);
+            fn(id2.data);
+            ctx.putImageData(id2, 0, 0);
+        }
+
+        // Flip Horizontal
+        transform('augFlipH', function(ctx){ ctx.translate(W,0); ctx.scale(-1,1); });
+        // Flip Vertical
+        transform('augFlipV', function(ctx){ ctx.translate(0,H); ctx.scale(1,-1); });
+        // Rotate 90
+        transform('augRot90', function(ctx){ ctx.translate(W,0); ctx.rotate(Math.PI/2); });
+        // Rotate 180
+        transform('augRot180', function(ctx){ ctx.translate(W,H); ctx.rotate(Math.PI); });
+        // Brightness +30
+        transformPixel('augBright', function(d){
+            for(var i=0;i<d.length;i+=4){
+                d[i]=Math.min(255,d[i]+30);
+                d[i+1]=Math.min(255,d[i+1]+30);
+                d[i+2]=Math.min(255,d[i+2]+30);
+            }
+        });
+        // Brightness -30
+        transformPixel('augDark', function(d){
+            for(var i=0;i<d.length;i+=4){
+                d[i]=Math.max(0,d[i]-30);
+                d[i+1]=Math.max(0,d[i+1]-30);
+                d[i+2]=Math.max(0,d[i+2]-30);
+            }
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.augBtn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.augBtn').forEach(function(b){ b.classList.remove('active'); });
+            this.classList.add('active');
+            drawAugmentation(this.dataset.src);
+        });
+    });
+});
+
+// ============================================================
+// GLCM VISUALIZATION (tetap canvas pattern, tidak butuh gambar asli)
+// ============================================================
+function drawGLCM() {
+    var cv = document.getElementById('cvGLCM');
+    if (!cv) return;
+    var ctx = cv.getContext('2d');
+    var W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    var levels=8, cw=W/levels, ch=(H-14)/levels;
+    for(var i=0;i<levels;i++){
+        for(var j=0;j<levels;j++){
+            var dist=Math.abs(i-j);
+            var v=Math.max(0,1-dist*0.18)*(0.5+Math.random()*0.3);
+            ctx.fillStyle='rgba(231,76,60,'+Math.min(1,v).toFixed(2)+')';
+            ctx.fillRect(j*cw+1,i*ch+1,cw-2,ch-2);
+        }
+    }
+    ctx.fillStyle='#555';ctx.font='9px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('0°',W*0.12,H-2);ctx.fillText('45°',W*0.37,H-2);
+    ctx.fillText('90°',W*0.62,H-2);ctx.fillText('135°',W*0.88,H-2);
+    ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=0.5;
+    for(var k=1;k<4;k++){ctx.beginPath();ctx.moveTo(W/4*k,0);ctx.lineTo(W/4*k,H-14);ctx.stroke();}
+    ctx.fillStyle='#999';ctx.font='8px Segoe UI';ctx.textAlign='left';
+    ctx.fillText('Gray Level Co-occurrence Matrix (simulasi)',2,10);
+}
+
+function drawColorFeatures() {
+    var cv = document.getElementById('cvColor');
+    if (!cv) return;
+    var ctx=cv.getContext('2d');
+    var W=cv.width,H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    var section=W/3;
+    var colors=[['#1565C0','#1976D2','#90CAF9'],['#2E7D32','#388E3C','#A5D6A7'],['#B71C1C','#C62828','#EF9A9A']];
+    var labels=['B','G','R'];
+    var vals=[0.04,0.07,0.13,0.24,0.22,0.15,0.10,0.05];
+    colors.forEach(function(cols,ci){
+        var xS=ci*section+4;
+        var bw=(section-8)/8;
+        vals.forEach(function(v,bi){
+            var bh=v*(H-20);
+            ctx.fillStyle=cols[Math.min(bi,2)];
+            ctx.fillRect(xS+bi*bw,H-20-bh,bw-1,bh);
+        });
+        ctx.fillStyle='#555';ctx.font='9px Segoe UI';ctx.textAlign='center';
+        ctx.fillText(labels[ci],xS+(section-8)/2,H-4);
+        if(ci<2){ctx.strokeStyle='#ddd';ctx.lineWidth=1;
+            ctx.beginPath();ctx.moveTo((ci+1)*section,0);ctx.lineTo((ci+1)*section,H);ctx.stroke();}
+    });
+    var hsvC=['#FF5722','#FF9800','#FFC107','#8BC34A','#4CAF50','#009688','#2196F3','#673AB7','#E91E63'];
+    hsvC.forEach(function(c,i){
+        ctx.fillStyle=c;ctx.beginPath();
+        ctx.arc(6+i*((W*0.9)/9),11,3.5,0,Math.PI*2);ctx.fill();
+    });
+    ctx.fillStyle='#999';ctx.font='8px Segoe UI';ctx.textAlign='left';
+    ctx.fillText('Histogram BGR (8 bins) + dot HSV channel',2,9);
+}
+
+function drawLBP() {
+    var cv=document.getElementById('cvLBP');
+    if(!cv)return;
+    var ctx=cv.getContext('2d');
+    var W=cv.width,H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    var pw=W*0.38,cx2=pw/2,cy2=H/2;
+    ctx.fillStyle='#f5f5f5';ctx.fillRect(0,0,pw,H);
+    ctx.fillStyle='#2ecc71';ctx.beginPath();ctx.arc(cx2,cy2,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='white';ctx.font='bold 8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('128',cx2,cy2+3);
+    var nVals=[120,200,80,190,110,210,75,185],threshold=128;
+    for(var n=0;n<8;n++){
+        var angle=(n/8)*Math.PI*2-Math.PI/2;
+        var nx=cx2+Math.cos(angle)*22,ny=cy2+Math.sin(angle)*22;
+        var above=nVals[n]>=threshold;
+        ctx.fillStyle=above?'#27ae60':'#ecf0f1';
+        ctx.strokeStyle='#bbb';ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(nx,ny,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle=above?'white':'#555';
+        ctx.font='8px Segoe UI';ctx.textAlign='center';
+        ctx.fillText(above?'1':'0',nx,ny+3);
+    }
+    ctx.fillStyle='#888';ctx.font='8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('LBP pattern',cx2,H-4);
+    ctx.strokeStyle='#ddd';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pw+2,0);ctx.lineTo(pw+2,H);ctx.stroke();
+    var hx=pw+6,hw=W-pw-8,bins=14,bw2=hw/bins;
+    var lv=[0.12,0.08,0.15,0.05,0.18,0.10,0.07,0.13,0.04,0.09,0.06,0.11,0.08,0.03];
+    lv.forEach(function(v,i){
+        var bh=v*(H-16);
+        ctx.fillStyle='rgba(46,204,113,'+(0.5+v*2)+')';
+        ctx.fillRect(hx+i*bw2+1,H-14-bh,bw2-2,bh);
+    });
+    ctx.fillStyle='#888';ctx.font='8px Segoe UI';ctx.textAlign='center';
+    ctx.fillText('Histogram (26 bins)',hx+hw/2,H-4);
+}
+
+// ============================================================
+// ACTIVATE STEP
+// ============================================================
+function activateStep(step) {
+    document.querySelectorAll('.flow-detail-card').forEach(function(el){ el.classList.remove('active'); });
+    document.querySelectorAll('.flow-node').forEach(function(el){ el.classList.remove('active'); });
+    var detail=document.getElementById('flow-detail-'+step);
+    if(detail){ detail.classList.add('active'); }
+    document.querySelectorAll('.flow-node[data-step="'+step+'"]').forEach(function(el){ el.classList.add('active'); });
+
+    setTimeout(function(){
+        if(step==2){ drawPreprocessing(); }
+        if(step==3){ drawGLCM(); drawColorFeatures(); drawLBP(); }
+        if(step==4){ drawAugmentation(); }
+    }, 60);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    activateStep(1);
+});
+</script>
 {% endblock %}
