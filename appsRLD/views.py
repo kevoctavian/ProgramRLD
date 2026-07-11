@@ -28,7 +28,7 @@ from .models import (
     DiagnosisResult,
     DiseaseCategory,
     GLCMFeatures,
-    SystemStatistics
+    SystemStatistics, CONFIDENCE_THRESHOLD, CLOSE_CALL_MARGIN,
 )
 from .forms import ImageUploadForm, FeedbackForm, SearchForm, RegisterForm, LoginForm
 from .ml_pipeline import RiceDiseasePipeline
@@ -96,10 +96,18 @@ class HomeView(LoginRequiredMixin, TemplateView):
             avg=Avg('total_time')
         )['avg'] or 0
 
+        # Feedback stats
+        total_feedback = base_qs.exclude(is_correct__isnull=True).count()
+        correct_predictions = base_qs.filter(is_correct=True).count()
+        wrong_predictions = base_qs.filter(is_correct=False).count()
+        accuracy_rate = (
+            correct_predictions / total_feedback * 100
+        ) if total_feedback > 0 else 0
+
         context.update({
             'model_accuracy': model_accuracy,
             'recent_diagnoses': recent_diagnoses,
-            'disease_distribution': json.dumps(list(disease_distribution)),
+            'disease_distribution': list(disease_distribution),
             'model_loaded': pipeline.model is not None,
             # Statistik per user
             'total_images': total_images,
@@ -119,14 +127,11 @@ class HomeView(LoginRequiredMixin, TemplateView):
             'total_healthy': base_qs.filter(
                 predicted_disease__name='healthy'
             ).count(),
-            # Penilaian pengguna
-            'total_feedback': base_qs.exclude(is_correct__isnull=True).count(),
-            'correct_predictions': base_qs.filter(is_correct=True).count(),
-            'accuracy_rate': (
-                base_qs.filter(is_correct=True).count() /
-                base_qs.exclude(is_correct__isnull=True).count() * 100
-            ) if base_qs.exclude(is_correct__isnull=True).count() > 0 else 0,
-            'wrong_predictions': base_qs.filter(is_correct=False).count(),
+            # Feedback
+            'total_feedback': total_feedback,
+            'correct_predictions': correct_predictions,
+            'wrong_predictions': wrong_predictions,
+            'accuracy_rate': round(accuracy_rate, 1),
         })
         return context
 
@@ -251,11 +256,20 @@ class UploadAndDiagnoseView(View):
                 stats = SystemStatistics.get_stats()
                 stats.update_statistics()
 
-                messages.success(
-                    request,
-                    f"Diagnosis berhasil! Terdeteksi: {predicted_disease.display_name} "
-                    f"dengan confidence {result['confidence']:.2f}%"
-                )
+                if result['is_confident']:
+                    messages.success(
+                        request,
+                        f"Diagnosis berhasil! Terdeteksi: {predicted_disease.display_name} "
+                        f"dengan confidence {result['confidence']:.2f}%"
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f"⚠ Hasil kurang meyakinkan (confidence {result['confidence']:.2f}%, "
+                        f"di bawah ambang batas {result['confidence_threshold']:.0f}%). "
+                        f"Prediksi sementara: {predicted_disease.display_name}. "
+                        f"Disarankan foto ulang dengan pencahayaan lebih baik dan fokus jelas pada daun."
+                    )
 
                 return redirect('appsRLD:result', diagnosis_id=diagnosis.id)
 
@@ -400,11 +414,20 @@ class CameraCaptureDiagnoseView(LoginRequiredMixin, View):
             stats = SystemStatistics.get_stats()
             stats.update_statistics()
 
-            messages.success(
-                request,
-                f"Diagnosis berhasil! Terdeteksi: {predicted_disease.display_name} "
-                f"dengan confidence {result['confidence']:.2f}%"
-            )
+            if result['is_confident']:
+                    messages.success(
+                        request,
+                        f"Diagnosis berhasil! Terdeteksi: {predicted_disease.display_name} "
+                        f"dengan confidence {result['confidence']:.2f}%"
+                    )
+            else:
+                    messages.warning(
+                        request,
+                        f"⚠ Hasil kurang meyakinkan (confidence {result['confidence']:.2f}%, "
+                        f"di bawah ambang batas {result['confidence_threshold']:.0f}%). "
+                        f"Prediksi sementara: {predicted_disease.display_name}. "
+                        f"Disarankan foto ulang dengan pencahayaan lebih baik dan fokus jelas pada daun."
+                    )
 
             return redirect('appsRLD:result', diagnosis_id=diagnosis.id)
 
@@ -442,11 +465,23 @@ class DiagnosisResultView(LoginRequiredMixin, View):
         confidence_data = diagnosis.get_all_confidences()
         feedback_form = FeedbackForm(instance=diagnosis)
 
+        second_disease = None
+        second_confidence = None
+        if diagnosis.is_close_call():
+            _, second_name, second_confidence = diagnosis.get_sorted_confidences()[1]
+            second_disease = DiseaseCategory.objects.filter(
+                name=diagnosis.get_sorted_confidences()[1][0]
+            ).first()
+
         return render(request, self.template_name, {
             'diagnosis': diagnosis,
             'glcm_features': glcm_features,
             'confidence_data': json.dumps(confidence_data),
-            'feedback_form': feedback_form
+            'feedback_form': feedback_form,
+            'is_ambiguous': diagnosis.is_ambiguous(),
+            'confidence_threshold': CONFIDENCE_THRESHOLD,
+            'second_disease': second_disease,
+            'second_confidence': second_confidence,
         })
 
     def post(self, request, diagnosis_id):
@@ -481,11 +516,21 @@ class DiagnosisResultView(LoginRequiredMixin, View):
         except Exception:
             glcm_features = None
 
+        second_disease = None
+        second_confidence = None
+        if diagnosis.is_close_call():
+            _, second_name, second_confidence = diagnosis.get_sorted_confidences()[1]
+            second_disease = DiseaseCategory.objects.filter(
+                name=diagnosis.get_sorted_confidences()[1][0]
+            ).first()
+        
         return render(request, self.template_name, {
             'diagnosis': diagnosis,
             'glcm_features': glcm_features,
             'confidence_data': json.dumps(diagnosis.get_all_confidences()),
-            'feedback_form': feedback_form
+            'feedback_form': feedback_form,
+            'second_disease': second_disease,
+            'second_confidence': second_confidence
         })
 
 

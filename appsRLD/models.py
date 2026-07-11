@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import os
 
+CONFIDENCE_THRESHOLD = 60.0
+CLOSE_CALL_MARGIN = 15.0
 
 # ========== MODEL 1: DISEASE CATEGORIES ==========
 class DiseaseCategory(models.Model):
@@ -358,6 +360,25 @@ class DiagnosisResult(models.Model):
             return "Sedang"
         else:
             return "Rendah"
+        
+    def is_ambiguous(self):
+        """Cek apakah confidence di bawah ambang batas (hasil belum meyakinkan)"""
+        return self.max_confidence < CONFIDENCE_THRESHOLD
+    
+    def get_sorted_confidences(self):
+        """Return list (key, display_name, confidence) diurutkan dari confidence tertinggi"""
+        data = [
+            ('bacterial_blight', 'Bacterial Leaf Blight', self.confidence_bacterial_blight),
+            ('rice_blast',       'Rice Blast',            self.confidence_rice_blast),
+            ('tungro',           'Tungro',                self.confidence_tungro),
+            ('healthy',          'Healthy',               self.confidence_healthy),
+        ]
+        return sorted(data, key=lambda x: x[2], reverse=True)
+
+    def is_close_call(self):
+        """Cek apakah kandidat #1 dan #2 berdekatan (selisih < CLOSE_CALL_MARGIN)"""
+        top1, top2 = self.get_sorted_confidences()[:2]
+        return (top1[2] - top2[2]) < CLOSE_CALL_MARGIN
 
 
 # ========== MODEL 5: MODEL TRAINING HISTORY ==========

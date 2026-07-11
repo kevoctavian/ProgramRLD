@@ -15,6 +15,7 @@ import os
 import time
 from PIL import Image
 
+CONFIDENCE_THRESHOLD = 60.0
 
 class ImagePreprocessor:
     def __init__(self, target_size=(256, 256)):
@@ -553,6 +554,8 @@ class RiceDiseasePipeline:
             'predicted_class':       db_class_name,
             'predicted_class_index': int(prediction),
             'confidence':            float(probabilities[prediction] * 100),
+            'is_confident':          float(probabilities[prediction] * 100) >= CONFIDENCE_THRESHOLD,
+            'confidence_threshold':  CONFIDENCE_THRESHOLD,
             'all_probabilities': {
                 self.class_name_mapping.get(self.class_names[i], self.class_names[i]): float(prob * 100)
                 for i, prob in enumerate(probabilities)

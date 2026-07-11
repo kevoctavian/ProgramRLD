@@ -287,24 +287,41 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
 
     class_names = ['Bacterial Blight', 'Rice Blast', 'Tungro', 'Healthy']
 
-    # ========== STEP 1: LOAD + AUGMENT ==========
+# ========== STEP 1: LOAD DARI FOLDER TRAIN/VAL/TEST TERPISAH ==========
     print("\n" + "=" * 80)
-    print("STEP 1: LOADING DATASET + AUGMENTASI KELAS MINORITAS")
+    print("STEP 1: LOADING DATASET DARI FOLDER TRAIN / VAL / TEST TERPISAH")
     print("=" * 80)
 
-    X, y = load_dataset_with_augmentation(
-        dataset_path,
-        augment_minority=True,
-        augment_threshold=700  # Kelas < 700 gambar akan diaugmentasi
+    train_path = os.path.join(dataset_path, 'train')
+    val_path = os.path.join(dataset_path, 'val')
+    test_path = os.path.join(dataset_path, 'test')
+
+    for p, name in [(train_path, 'train'), (val_path, 'val'), (test_path, 'test')]:
+        if not os.path.exists(p):
+            raise FileNotFoundError(
+                f"Folder '{name}' tidak ditemukan: {p}\n"
+                f"Jalankan split_dataset.py terlebih dahulu untuk membuat folder ini."
+            )
+
+    print("\n📁 Loading TRAIN set (augmentasi kelas minoritas AKTIF)...")
+    X_train, y_train = load_dataset_with_augmentation(
+        train_path, augment_minority=True, augment_threshold=700
+    )
+    X_train = X_train + np.random.normal(0, 0.005, X_train.shape)  # sedikit noise
+
+    print("\n📁 Loading VALIDATION set (TANPA augmentasi — data asli murni)...")
+    X_val, y_val = load_dataset_with_augmentation(
+        val_path, augment_minority=False
     )
 
-    # Sedikit noise
-    X = X + np.random.normal(0, 0.005, X.shape)
+    print("\n📁 Loading TEST set (TANPA augmentasi — data asli murni)...")
+    X_test, y_test = load_dataset_with_augmentation(
+        test_path, augment_minority=False
+    )
 
-    print(f"\n✓ Dataset setelah augmentasi:")
-    unique, counts = np.unique(y, return_counts=True)
-    for cls, count in zip(unique, counts):
-        print(f"  - {class_names[cls]:20s}: {count:5d} ({count/len(y)*100:.2f}%)")
+    print(f"\n✓ Train : {len(X_train)} sampel (termasuk hasil augmentasi kelas minoritas)")
+    print(f"✓ Val   : {len(X_val)} sampel (data asli, tanpa augmentasi)")
+    print(f"✓ Test  : {len(X_test)} sampel (data asli, tanpa augmentasi)")
 
     # ========== STEP 2: SPLIT ==========
     print("\n" + "=" * 80)
@@ -312,10 +329,10 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
     print("=" * 80)
 
     X_temp, X_test, y_temp, y_test = train_test_split(
-        X, y, test_size=0.10, random_state=random_state, stratify=y
+        X_test, y_test, test_size=0.10, random_state=random_state, stratify=y_test
     )
     X_train, X_val, y_train, y_val = train_test_split(
-        X_temp, y_temp, test_size=0.1111, random_state=random_state, stratify=y_temp
+        X_train, y_train, test_size=0.1111, random_state=random_state, stratify=y_train
     )
 
     print(f"  Train: {len(X_train)} | Val: {len(X_val)} | Test: {len(X_test)}")
@@ -526,7 +543,7 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
             model_name='Random Forest + Augmentasi',
             version=f'v{datetime.now().strftime("%Y%m%d_%H%M%S")}',
             dataset_name='RLD_Dataset_Clean (4 Classes + Augmentasi)',
-            total_samples=len(X),
+            total_samples=len(X_train) + len(X_val) + len(X_test),
             training_samples=len(X_train),
             validation_samples=len(X_val),
             test_samples=len(X_test),
@@ -568,7 +585,8 @@ def train_model(dataset_path, output_dir, use_ensemble=True,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, required=True)
+    parser.add_argument('--dataset', type=str, required=True,
+                         help='Path ke folder HASIL split_dataset.py (berisi subfolder train/, val/, test/)')
     parser.add_argument('--output', type=str, default='./ml_models')
     parser.add_argument('--ensemble', action='store_true')
     parser.add_argument('--smote-type', type=str, default='borderline',
